@@ -35,9 +35,13 @@ def load_models(all_restore_step, synthesizer_configs):
         vocoder_model = get_vocoder(all_restore_step['vocoder'])
     return synthesizer_model, resgrad_model, vocoder_model
 
-def get_synthesizer_configs(preprocess_config_path, model_config_path, train_config_path):
-    preprocess_config = yaml.load(open(preprocess_config_path, "r"), Loader=yaml.FullLoader)
-    model_config = yaml.load(open(model_config_path, "r"), Loader=yaml.FullLoader)
-    train_config = yaml.load(open(train_config_path, "r"), Loader=yaml.FullLoader)
-    synthesizer_configs = {"preprocess_config":preprocess_config,"model_config":model_config, "train_config":train_config}
-    return synthesizer_configs
+def load_yaml_file(path):
+    ## define custom tag handler
+    def join(loader, node):
+        seq = loader.construct_sequence(node)
+        return str(os.path.join(*[str(i) for i in seq]))
+    
+    ## register the tag handler
+    yaml.add_constructor('!join', join)
+    data = yaml.load(open(path, "r"), Loader=yaml.FullLoader)
+    return data

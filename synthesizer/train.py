@@ -14,11 +14,11 @@ from .dataset import Dataset
 from .evaluate import evaluate
 
 
-def train_model(args, configs):
+def train_model(args, config):
     print("Prepare training ...")
 
-    preprocess_config, model_config, train_config = configs
-    device = model_config['device']
+    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model']. config['synthesizer']['train']
+    device = config['synthesizer']['main']['device']
     # Get dataset
     dataset = Dataset(
         "train.txt", preprocess_config, train_config, sort=True, drop_last=True
@@ -34,7 +34,7 @@ def train_model(args, configs):
     )
 
     # Prepare model
-    model, optimizer = get_model(args.restore_step, configs, train=True)
+    model, optimizer = get_model(args.restore_step, config, train=True)
     if device == 'cuda':
         model = nn.DataParallel(model)
     num_param = get_param_num(model)
@@ -137,7 +137,7 @@ def train_model(args, configs):
 
                 if step % val_step == 0:
                     model.eval()
-                    message = evaluate(model, step, configs, val_logger, vocoder)
+                    message = evaluate(model, step, config, val_logger, vocoder)
                     with open(os.path.join(val_log_path, "log.txt"), "a") as f:
                         f.write(message + "\n")
                     outer_bar.write(message)

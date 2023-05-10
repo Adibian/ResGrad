@@ -4,14 +4,13 @@ import torch
 from ..model import FastSpeech2, ScheduledOptim
 
 
-def get_model(restore_step, configs, train=False):
-    (preprocess_config, model_config, train_config) = configs
+def get_model(restore_step, config, train=False):
 
-    device = model_config['device']
-    model = FastSpeech2(preprocess_config, model_config).to(device)
+    device = config['synthesizer']['main']['device']
+    model = FastSpeech2(config['synthesizer']['preprocess'], config['synthesizer']['model']).to(device)
     if restore_step:
         ckpt_path = os.path.join(
-            train_config["path"]["ckpt_path"],
+            config['synthesizer']['train']["path"]["ckpt_path"],
             "{}.pth.tar".format(restore_step),
         )
         ckpt = torch.load(ckpt_path, map_location=torch.device(device))
@@ -19,7 +18,7 @@ def get_model(restore_step, configs, train=False):
 
     if train:
         scheduled_optim = ScheduledOptim(
-            model, train_config, model_config, restore_step
+            model, config['synthesizer']['train'], config['synthesizer']['model'], restore_step
         )
         if restore_step:
             scheduled_optim.load_state_dict(ckpt["optimizer"])

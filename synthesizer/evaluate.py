@@ -1,17 +1,14 @@
-import argparse
 import torch
-import yaml
 from torch.utils.data import DataLoader
 
-from .utils.model import get_model
 from .utils.tools import to_device, log, synth_one_sample
 from .model import FastSpeech2Loss
 from .dataset import Dataset
 
 
-def evaluate(model, step, configs, logger=None, vocoder=None):
-    preprocess_config, model_config, train_config = configs
-    device = model_config['device']
+def evaluate(model, step, config, logger=None, vocoder=None):
+    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model']. config['synthesizer']['train']
+    device = config['synthesizer']['main']['device']
     # Get dataset
     dataset = Dataset(
         "val.txt", preprocess_config, train_config, sort=False, drop_last=False
@@ -80,35 +77,3 @@ def evaluate(model, step, configs, logger=None, vocoder=None):
     return message
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--restore_step", type=int, default=30000)
-    parser.add_argument(
-        "-p",
-        "--preprocess_config",
-        type=str,
-        required=True,
-        help="path to preprocess.yaml",
-    )
-    parser.add_argument(
-        "-m", "--model_config", type=str, required=True, help="path to model.yaml"
-    )
-    parser.add_argument(
-        "-t", "--train_config", type=str, required=True, help="path to train.yaml"
-    )
-    args = parser.parse_args()
-
-    # Read Config
-    preprocess_config = yaml.load(
-        open(args.preprocess_config, "r"), Loader=yaml.FullLoader
-    )
-    model_config = yaml.load(open(args.model_config, "r"), Loader=yaml.FullLoader)
-    train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
-    configs = (preprocess_config, model_config, train_config)
-
-    # Get model
-    model = get_model(args, configs, device, train=False).to(device)
-
-    message = evaluate(model, args.restore_step, configs)
-    print(message)

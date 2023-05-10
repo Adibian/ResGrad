@@ -1,8 +1,7 @@
 import argparse
 
-import yaml
-
-from preprocessor import persian
+from .preprocessor import persian
+from ..utils import load_yaml_file
 
 
 def main(config):
@@ -12,8 +11,8 @@ def main(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str, help="path to preprocess.yaml")
+    parser.add_argument("config", type=str, help="path to config.yaml")
     args = parser.parse_args()
 
-    config = yaml.load(open(args.config, "r"), Loader=yaml.FullLoader)
-    main(config)
+    config = load_yaml_file(args.config)
+    main(config['synthesizer']['preprocess'])
