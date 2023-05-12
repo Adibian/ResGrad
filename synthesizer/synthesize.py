@@ -29,7 +29,7 @@ def synthesize(model, batch, control_values, preprocess_config, device, p_target
             output,
             preprocess_config,
         )
-    return mel, durations, pitch, energy
+    return mel[0].to(device), durations[0].to(device), pitch[0].to(device), energy[0].to(device)
 
 def infer(model, grapheme, control_values, preprocess_config, device, speakers=[0], p_target=None, d_target=None, e_target=None):
     t = str(time.time()).replace('.', '_')

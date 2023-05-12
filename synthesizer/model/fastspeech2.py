@@ -12,13 +12,14 @@ from ..utils.tools import get_mask_from_lengths
 class FastSpeech2(nn.Module):
     """ FastSpeech2 """
 
-    def __init__(self, preprocess_config, model_config):
+    def __init__(self, config):
         super(FastSpeech2, self).__init__()
+        preprocess_config, model_config = config['synthesizer']['preprocess'], config['synthesizer']['model']
         self.model_config = model_config
-        self.device = model_config["device"]
+        self.device = config['synthesizer']['main']['device']
 
         self.encoder = Encoder(model_config)
-        self.variance_adaptor = VarianceAdaptor(preprocess_config, model_config)
+        self.variance_adaptor = VarianceAdaptor(preprocess_config, model_config, self.device)
         self.decoder = Decoder(model_config)
         self.mel_linear = nn.Linear(
             model_config["transformer"]["decoder_hidden"],
@@ -27,7 +28,7 @@ class FastSpeech2(nn.Module):
         self.postnet = PostNet()
 
         self.speaker_emb = None
-        if model_config["multi_speaker"]:
+        if config['multi_speaker']:
             with open(
                 os.path.join(
                     preprocess_config["path"]["preprocessed_path"], "speakers.json"

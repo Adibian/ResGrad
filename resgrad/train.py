@@ -5,10 +5,9 @@ import os
 
 from .utils import plot_tensor, denormalize_residual, load_model
 from .data import create_dataset
-from . import config 
 
 
-def logging(logger, original_spec, synthesized_spec, target_residual, noisy_spec, pred, mask, title, step):
+def logging(logger, config, original_spec, synthesized_spec, target_residual, noisy_spec, pred, mask, title, step):
     zero_indexes = (mask == 0).nonzero()
     if len(zero_indexes):
         start_zero_index = int(zero_indexes[0][-1])
@@ -17,10 +16,10 @@ def logging(logger, original_spec, synthesized_spec, target_residual, noisy_spec
     original_spec = original_spec[:,:start_zero_index]
     synthesized_spec = synthesized_spec[:,:start_zero_index]
     noisy_spec = noisy_spec[:,:start_zero_index]
-    if config.model_type1 == "spec2residual":
+    if config['resgrade']['model_type1'] == "spec2residual":
         target_residual = target_residual[:,:start_zero_index]
         pred_residual = pred[:,:start_zero_index]
-        if config.normallize_residual:
+        if config['resgrade']['normallize_residual']:
             pred_spec = denormalize_residual(pred[:,:start_zero_index]) + synthesized_spec
         else:
             pred_spec = pred[:,:start_zero_index] + synthesized_spec
@@ -35,17 +34,19 @@ def logging(logger, original_spec, synthesized_spec, target_residual, noisy_spec
     logger.add_image(f'{title}/noisy_spec', plot_tensor(noisy_spec.squeeze().cpu().detach().numpy(), "noisy_spectrum"), global_step=step, dataformats='HWC')
 
 
-def resgrad_train(args):
-    os.makedirs(config.log_dir, exist_ok=True)
-    os.makedirs(config.save_model_path, exist_ok=True)
+def resgrad_train(args, config):
+    os.makedirs(config['resgrade']['log_dir'], exist_ok=True)
+    os.makedirs(config['resgrade']['save_model_path'], exist_ok=True)
+
+    device = config['resgrade']['device']
 
     print('Initializing logger...')
-    logger = SummaryWriter(log_dir=config.log_dir)
+    logger = SummaryWriter(log_dir=config['resgrade']['log_dir'])
     print("Load data...")
     train_dataset, val_dataset = create_dataset()
     
     print("Load model...")
-    model, optimizer = load_model(train=True, restore_model_epoch=args.restore_epoch)
+    model, optimizer = load_model(config, train=True, restore_model_epoch=args.restore_epoch)
     
     scaler = torch.cuda.amp.GradScaler()
 
@@ -53,22 +54,22 @@ def resgrad_train(args):
     avg_val_loss = 0
     avg_train_loss = 0
     print("Start training...")
-    for epoch in range(config.epochs):
+    for epoch in range(config['resgrade']['epochs']):
         loop = tqdm(train_dataset)
         train_loss_list = []
         for train_data in loop:
             step += 1
-            if config.model_type1 == "spec2residual":
+            if config['resgrade']['model_type1'] == "spec2residual":
                 synthesized_spec, original_spec, residual_spec, mask = train_data
-                synthesized_spec = synthesized_spec.to(config.device)
-                mask = mask.to(config.device)
-                residual_spec = residual_spec.to(config.device)
+                synthesized_spec = synthesized_spec.to(device)
+                mask = mask.to(device)
+                residual_spec = residual_spec.to(device)
                 loss, pred = model.compute_loss(residual_spec, mask, synthesized_spec)
             else:
                 synthesized_spec, original_spec, mask = train_data
-                mask = mask.to(config.device)
-                synthesized_spec = synthesized_spec.to(config.device)
-                original_spec = original_spec.to(config.device)
+                mask = mask.to(device)
+                synthesized_spec = synthesized_spec.to(device)
+                original_spec = original_spec.to(device)
                 loss, pred = model.compute_loss(original_spec, mask, synthesized_spec)
 
             optimizer.zero_grad()
@@ -77,24 +78,24 @@ def resgrad_train(args):
             scaler.update()
             train_loss_list.append(loss.item())
 
-            if step % config.validate_every_n_step == 0:
+            if step % config['resgrade']['validate_every_n_step'] == 0:
                 model.eval()
                 with torch.no_grad():
                     all_val_loss = []
                     val_num = 0
                     for val_data in val_dataset:
                         val_num += 1
-                        if config.model_type1 == "spec2residual":
+                        if config['resgrade']['model_type1'] == "spec2residual":
                             synthesized_spec, original_spec, target_residual, mask = val_data
-                            synthesized_spec = synthesized_spec.to(config.device)
-                            mask = mask.to(config.device)
-                            target_residual = target_residual.to(config.device)
+                            synthesized_spec = synthesized_spec.to(device)
+                            mask = mask.to(device)
+                            target_residual = target_residual.to(device)
                             val_loss, noisy_spec = model.compute_loss(target_residual, mask, synthesized_spec)
                         else:
                             synthesized_spec, original_spec, mask = val_data
-                            synthesized_spec = synthesized_spec.to(config.device)
-                            mask = mask.to(config.device)
-                            original_spec = original_spec.to(config.device)
+                            synthesized_spec = synthesized_spec.to(device)
+                            mask = mask.to(device)
+                            original_spec = original_spec.to(device)
                             val_loss, noisy_spec = model.compute_loss(original_spec, mask, synthesized_spec)
                             target_residual = [None for _ in range(len(original_spec))]
                             
@@ -102,11 +103,11 @@ def resgrad_train(args):
                     
                         ## logging result spectrums
                         if val_num == 1:
-                            z = synthesized_spec + torch.randn_like(synthesized_spec, device=config.device) / 1.5
+                            z = synthesized_spec + torch.randn_like(synthesized_spec, device=device) / 1.5
                             # Generate sample by performing reverse dynamics
                             pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
                             for i in range(3):
-                                logging(logger, original_spec[i], synthesized_spec[i], target_residual[i], noisy_spec[i], pred[i], mask[i], \
+                                logging(logger, config, original_spec[i], synthesized_spec[i], target_residual[i], noisy_spec[i], pred[i], mask[i], \
                                         f'image{i}_epoch{epoch}', step)
 
                 avg_val_loss = sum(all_val_loss) / len(all_val_loss)
@@ -120,7 +121,7 @@ def resgrad_train(args):
             loop.set_postfix(train_loss=avg_train_loss, val_loss=avg_val_loss)
         
         ## Save checkpoints
-        torch.save(model.state_dict(), os.path.join(config.save_path, f'ResGrad_epoch{epoch}.pth'))
-        torch.save(optimizer.state_dict(), os.path.join(config.save_path, 'optimizer.pth'))
+        torch.save(model.state_dict(), os.path.join(config['resgrade']['save_path'], f'ResGrad_epoch{epoch}.pth'))
+        torch.save(optimizer.state_dict(), os.path.join(config['resgrade']['save_path'], 'optimizer.pth'))
    
 

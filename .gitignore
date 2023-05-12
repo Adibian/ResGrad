@@ -5,13 +5,21 @@ synthesizer/*.npy
 
 ## Vocoder
 vocoder/ckpt/g_2500000_persian
+vocoder/ckpt/g_2500000
 
 
 ## Others
 dataset/Persian/synthesizer_data/*
-dataset/Persian/resgrad/*
-output/persian/synthesizer/*
-output/persian/resgrad/*
+dataset/Persian/resgrad_data/*
+
+dataset/MS_Persian/synthesizer_data/*
+dataset/MS_Persian/resgrad_data/*
+
+output/Persian/synthesizer/*
+output/Persian/resgrad/*
+output/Persian/results/*
+output/reserved/*
+
 
 commands.txt
 *__pycache__/

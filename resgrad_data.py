@@ -6,13 +6,15 @@ import os
 from tqdm import tqdm
 import numpy as np
 import torch
-import yaml
 
 
 def read_input_data(raw_data_path):
     input_texts = {}
-    for speaker in os.listdir(raw_data_path):
+    speakers = os.listdir(raw_data_path)
+    for i, speaker in enumerate(speakers):
         dir_path = os.path.join(raw_data_path, speaker)
+        # loop = tqdm(os.listdir(dir_path))
+        # loop.set_description(f'speaker count = {i+1}/{len(speakers)}')
         for file_name in os.listdir(dir_path):
             if '.lab' in file_name:
                 file_path = os.path.join(dir_path, file_name)
@@ -24,21 +26,23 @@ def read_input_data(raw_data_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--synthesizer_restore_step", type=int, required=True)
-    parser.add_argument("--raw_data_path", type=str, default="synthesizer/raw_data", required=False)
-    parser.add_argument("-c", "--config", type=str, default='config/Persian/config.yaml', required=False, help="path to config.yaml")
+    parser.add_argument("--raw_data_path", type=str, default="synthesizer/raw_data/Persian", required=False)
+    parser.add_argument("--config", type=str, default='config/Persian/config.yaml', required=False, help="path to config.yaml")
     args = parser.parse_args()
     
     # Read Config
     config = load_yaml_file(args.config)
 
     restore_steps = {"synthesizer":args.synthesizer_restore_step, "resgrad":None, "vocoder":None}
-    synthesizer_model, _, _ = load_models(restore_steps, config['synthesizer'])
+    synthesizer_model, _, _ = load_models(restore_steps, config)
+    print("Load input data...")
     text_data = read_input_data(args.raw_data_path)
+    print("{} text input is loaded.".format(len(text_data)))
 
     current_path = os.getcwd()
     duration_dir = os.path.join(current_path, config['resgrad']['data']['durations_dir'])
     mel_pred_dir = os.path.join(current_path, config['resgrad']['data']['input_data_dir'])
-    mel_target_dir = os.path.join(current_path, config['resgrad']['data']['mel_target'])
+    mel_target_dir = os.path.join(current_path, config['resgrad']['data']['target_data_dir'])
 
     os.makedirs(mel_pred_dir, exist_ok=True)
     if not os.path.islink(mel_target_dir):
@@ -52,7 +56,7 @@ def main():
         dur_target = torch.from_numpy(np.load(os.path.join(duration_dir, dur_file_name))).to(device).unsqueeze(0)
 
         control_values = 1.0,1.0,1.0
-        mel_prediction, _, _, _ = synthesizer_infer(synthesizer_model, text, control_values, config, 
+        mel_prediction, _, _, _ = synthesizer_infer(synthesizer_model, text, control_values, config['synthesizer']['preprocess'], 
                                                     device, d_target=dur_target)
         file_path = os.path.join(mel_pred_dir, file_name)
         np.save(file_path, mel_prediction[0].cpu())

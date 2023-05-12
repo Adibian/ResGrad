@@ -155,17 +155,19 @@ def prepare_outputs(targets, predictions, preprocess_config):
         src_len = predictions[8][i].item()
         mel_len = predictions[9][i].item()
         mel_prediction = predictions[1][i, :mel_len].detach().transpose(0, 1)
-        duration = predictions[5][i, :src_len].detach().cpu().numpy()
+        duration = predictions[5][i, :src_len].detach()
         if preprocess_config["preprocessing"]["pitch"]["feature"] == "phoneme_level":
-            pitch = predictions[2][i, :src_len].detach().cpu().numpy()
+            pitch = predictions[2][i, :src_len].detach().cpu()
             pitch = expand(pitch, duration)
+            pitch = torch.from_numpy(pitch)
         else:
-            pitch = predictions[2][i, :mel_len].detach().cpu().numpy()
+            pitch = predictions[2][i, :mel_len].detach()
         if preprocess_config["preprocessing"]["energy"]["feature"] == "phoneme_level":
-            energy = predictions[3][i, :src_len].detach().cpu().numpy()
+            energy = predictions[3][i, :src_len].detach().cpu()
             energy = expand(energy, duration)
+            energy = torch.from_numpy(energy)
         else:
-            energy = predictions[3][i, :mel_len].detach().cpu().numpy()
+            energy = predictions[3][i, :mel_len].detach()
         
         all_mel.append(mel_prediction)
         all_durations.append(duration)

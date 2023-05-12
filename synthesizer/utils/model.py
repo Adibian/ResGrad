@@ -7,7 +7,7 @@ from ..model import FastSpeech2, ScheduledOptim
 def get_model(restore_step, config, train=False):
 
     device = config['synthesizer']['main']['device']
-    model = FastSpeech2(config['synthesizer']['preprocess'], config['synthesizer']['model']).to(device)
+    model = FastSpeech2(config).to(device)
     if restore_step:
         ckpt_path = os.path.join(
             config['synthesizer']['train']["path"]["ckpt_path"],
