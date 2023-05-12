@@ -28,7 +28,7 @@ class FastSpeech2(nn.Module):
         self.postnet = PostNet()
 
         self.speaker_emb = None
-        if config['multi_speaker']:
+        if config['main']['multi_speaker']:
             with open(
                 os.path.join(
                     preprocess_config["path"]["preprocessed_path"], "speakers.json"
@@ -66,9 +66,9 @@ class FastSpeech2(nn.Module):
         output = self.encoder(texts, src_masks)
 
         if self.speaker_emb is not None:
-            output = output + self.speaker_emb(speakers).unsqueeze(1).expand(
-                -1, max_src_len, -1
-            )     
+            self.speaker_vec = self.speaker_emb(speakers).unsqueeze(1)
+            output = output + self.speaker_vec.expand(-1, max_src_len, -1)     
+
 
         (
             output,
@@ -90,6 +90,9 @@ class FastSpeech2(nn.Module):
             e_control,
             d_control,
         ) 
+
+        if self.speaker_emb is not None:
+            output = output + self.speaker_vec.expand(-1, output.shape[1], -1)     
         
         output, mel_masks = self.decoder(output, mel_masks)
         output = self.mel_linear(output)

@@ -1,7 +1,7 @@
 import argparse
 
-from .preprocessor.preprocessor import Preprocessor
-from ..utils import load_yaml_file
+from preprocessor.preprocessor import Preprocessor
+from utils.tools import load_yaml_file
 
 
 if __name__ == "__main__":

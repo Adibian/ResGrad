@@ -5,13 +5,13 @@ import numpy as np
 
 
 def infer(model, mel_prediction, duration_prediction, config):
-    device = config['resgrade']['device']
+    device = config['main']['device']
     synthesized_spec = mel_prediction.transpose(0,2,1)
     synthesized_spec = torch.from_numpy(synthesized_spec).to(device)
-    if config['resgrade']['normallize_spectrum']:
+    if config['data']['normallize_spectrum']:
         synthesized_spec = normalize_data(synthesized_spec)
     
-    if config['resgrade']['model_type2'] == "segment-based":
+    if config['model']['model_type2'] == "segment-based":
         durations = np.round(np.exp(duration_prediction.squeeze()) - 1)
 
         all_mask, all_segment_spec, all_start_points, all_spec_size = [], [], [], []
@@ -22,7 +22,7 @@ def infer(model, mel_prediction, duration_prediction, config):
         end_phoneme_index = 0
         for i in range(1, len(durations)+1):
             win_length = int(sum(durations[start_phoneme_index:i]))
-            if win_length > config['resgrade']['max_win_length']:
+            if win_length > config['data']['max_win_length']:
                 end_phoneme_index = i-1
                 start_point = int(sum(durations[:start_phoneme_index]))
                 end_point = int(sum(durations[:end_phoneme_index]))
@@ -30,7 +30,7 @@ def infer(model, mel_prediction, duration_prediction, config):
                 all_start_points.append(start_point)
                 spec_size = segment_spec.shape[-1]
                 all_spec_size.append(spec_size)
-                segment_spec = torch.nn.functional.pad(segment_spec, (0, config['resgrade']['max_win_length']-spec_size), mode = "constant", value = 0.0)
+                segment_spec = torch.nn.functional.pad(segment_spec, (0, config['data']['max_win_length']-spec_size), mode = "constant", value = 0.0)
                 mask = torch.ones((1, segment_spec.shape[-1])).to(device)
                 mask[:,spec_size:] = 0
                 all_mask.append(mask.unsqueeze(0))
@@ -43,7 +43,7 @@ def infer(model, mel_prediction, duration_prediction, config):
         for i in range(len(durations)):
             start_phoneme_index -= 1
             win_length = int(sum(durations[start_phoneme_index:]))
-            if win_length > config['resgrade']['max_win_length']:
+            if win_length > config['resgrad']['max_win_length']:
                 start_phoneme_index += 1
                 start_point = int(sum(durations[:start_phoneme_index]))
                 end_point = int(sum(durations[:end_phoneme_index]))
@@ -51,7 +51,7 @@ def infer(model, mel_prediction, duration_prediction, config):
                 all_start_points.append(start_point)
                 spec_size = segment_spec.shape[-1]
                 all_spec_size.append(spec_size)
-                segment_spec = torch.nn.functional.pad(segment_spec, (0, config['resgrade']['max_win_length']-spec_size), mode = "constant", value = 0.0)
+                segment_spec = torch.nn.functional.pad(segment_spec, (0, config['data']['max_win_length']-spec_size), mode = "constant", value = 0.0)
                 mask = torch.ones((1, segment_spec.shape[-1])).to(device)
                 mask[:,spec_size:] = 0
                 all_mask.append(mask.unsqueeze(0))
@@ -72,15 +72,15 @@ def infer(model, mel_prediction, duration_prediction, config):
         pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
     pred = pred.to(device)
     
-    if config['resgrade']['model_type1'] == "spec2residual":
-        if config['resgrade']['normallize_residual']:
+    if config['model']['model_type1'] == "spec2residual":
+        if config['data']['normallize_residual']:
             spec_pred =  denormalize_residual(pred) + synthesized_spec
         else:
             spec_pred =  pred + synthesized_spec
     else:
         spec_pred = pred
 
-    if config['resgrade']['normallize_spectrum']:
+    if config['data']['normallize_spectrum']:
         spec_pred = denormalize_data(spec_pred)
 
     return spec_pred

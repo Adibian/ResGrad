@@ -1,5 +1,6 @@
 import os
 import json
+import yaml 
 
 import torch
 import torch.nn.functional as F
@@ -282,3 +283,14 @@ def pad(input_ele, mel_max_length=None):
         out_list.append(one_batch_padded)
     out_padded = torch.stack(out_list)
     return out_padded
+
+def load_yaml_file(path):
+    ## define custom tag handler
+    def join(loader, node):
+        seq = loader.construct_sequence(node)
+        return str(os.path.join(*[str(i) for i in seq]))
+    
+    ## register the tag handler
+    yaml.add_constructor('!join', join)
+    data = yaml.load(open(path, "r"), Loader=yaml.FullLoader)
+    return data

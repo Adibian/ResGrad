@@ -1,14 +1,13 @@
 from synthesizer.train import train_model
 from utils import load_yaml_file
 
-import yaml
 import argparse
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--restore_step", type=int, default=0)
-    parser.add_argument("-c", "--config", type=str, default='config/Persian/config.yaml', required=False, help="path to config.yaml")
+    parser.add_argument("--config", type=str, default='config/Persian/config.yaml', required=False, help="path to config.yaml")
     args = parser.parse_args()
     
     # Read Config

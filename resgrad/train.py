@@ -16,10 +16,10 @@ def logging(logger, config, original_spec, synthesized_spec, target_residual, no
     original_spec = original_spec[:,:start_zero_index]
     synthesized_spec = synthesized_spec[:,:start_zero_index]
     noisy_spec = noisy_spec[:,:start_zero_index]
-    if config['resgrade']['model_type1'] == "spec2residual":
+    if config['resgrad']['model_type1'] == "spec2residual":
         target_residual = target_residual[:,:start_zero_index]
         pred_residual = pred[:,:start_zero_index]
-        if config['resgrade']['normallize_residual']:
+        if config['resgrad']['normallize_residual']:
             pred_spec = denormalize_residual(pred[:,:start_zero_index]) + synthesized_spec
         else:
             pred_spec = pred[:,:start_zero_index] + synthesized_spec
@@ -35,15 +35,15 @@ def logging(logger, config, original_spec, synthesized_spec, target_residual, no
 
 
 def resgrad_train(args, config):
-    os.makedirs(config['resgrade']['log_dir'], exist_ok=True)
-    os.makedirs(config['resgrade']['save_model_path'], exist_ok=True)
+    os.makedirs(config['train']['log_dir'], exist_ok=True)
+    os.makedirs(config['train']['save_model_path'], exist_ok=True)
 
-    device = config['resgrade']['device']
+    device = config['main']['device']
 
     print('Initializing logger...')
-    logger = SummaryWriter(log_dir=config['resgrade']['log_dir'])
+    logger = SummaryWriter(log_dir=config['train']['log_dir'])
     print("Load data...")
-    train_dataset, val_dataset = create_dataset()
+    train_dataset, val_dataset = create_dataset(config)
     
     print("Load model...")
     model, optimizer = load_model(config, train=True, restore_model_epoch=args.restore_epoch)
@@ -54,23 +54,32 @@ def resgrad_train(args, config):
     avg_val_loss = 0
     avg_train_loss = 0
     print("Start training...")
-    for epoch in range(config['resgrade']['epochs']):
+    for epoch in range(config['train']['epochs']):
         loop = tqdm(train_dataset)
         train_loss_list = []
         for train_data in loop:
             step += 1
-            if config['resgrade']['model_type1'] == "spec2residual":
-                synthesized_spec, original_spec, residual_spec, mask = train_data
+            if config['model']['model_type1'] == "spec2residual":
+                synthesized_spec, original_spec, residual_spec, mask, speakers = train_data
                 synthesized_spec = synthesized_spec.to(device)
                 mask = mask.to(device)
                 residual_spec = residual_spec.to(device)
-                loss, pred = model.compute_loss(residual_spec, mask, synthesized_spec)
+                if config['main']['multi_speaker']:
+                    speakers = speakers.to(device)
+                    loss, pred = model.compute_loss(residual_spec, mask, synthesized_spec, speakers)
+                else:
+                    loss, pred = model.compute_loss(residual_spec, mask, synthesized_spec)
+
             else:
-                synthesized_spec, original_spec, mask = train_data
+                synthesized_spec, original_spec, mask, speakers = train_data
                 mask = mask.to(device)
                 synthesized_spec = synthesized_spec.to(device)
                 original_spec = original_spec.to(device)
-                loss, pred = model.compute_loss(original_spec, mask, synthesized_spec)
+                if config['main']['multi_speaker']:
+                    speakers = speakers.to(device)
+                    loss, pred = model.compute_loss(original_spec, mask, synthesized_spec, speakers)
+                else:
+                    loss, pred = model.compute_loss(original_spec, mask, synthesized_spec)
 
             optimizer.zero_grad()
             scaler.scale(loss).backward()
@@ -78,34 +87,45 @@ def resgrad_train(args, config):
             scaler.update()
             train_loss_list.append(loss.item())
 
-            if step % config['resgrade']['validate_every_n_step'] == 0:
+            if step % config['train']['validate_every_n_step'] == 0:
                 model.eval()
                 with torch.no_grad():
                     all_val_loss = []
                     val_num = 0
                     for val_data in val_dataset:
                         val_num += 1
-                        if config['resgrade']['model_type1'] == "spec2residual":
-                            synthesized_spec, original_spec, target_residual, mask = val_data
+                        if config['model']['model_type1'] == "spec2residual":
+                            synthesized_spec, original_spec, target_residual, mask, speakers = val_data
                             synthesized_spec = synthesized_spec.to(device)
                             mask = mask.to(device)
                             target_residual = target_residual.to(device)
-                            val_loss, noisy_spec = model.compute_loss(target_residual, mask, synthesized_spec)
+                            if config['main']['multi_speaker']:
+                                speakers = speakers.to(device)
+                                val_loss, noisy_spec = model.compute_loss(target_residual, mask, synthesized_spec, speakers)
+                            else:
+                                val_loss, noisy_spec = model.compute_loss(target_residual, mask, synthesized_spec)
+                                
                         else:
-                            synthesized_spec, original_spec, mask = val_data
+                            synthesized_spec, original_spec, mask, speakers = val_data
                             synthesized_spec = synthesized_spec.to(device)
                             mask = mask.to(device)
                             original_spec = original_spec.to(device)
-                            val_loss, noisy_spec = model.compute_loss(original_spec, mask, synthesized_spec)
+                            if config['main']['multi_speaker']:
+                                speakers = speakers.to(device)
+                                val_loss, noisy_spec = model.compute_loss(original_spec, mask, synthesized_spec, speakers)
+                            else:
+                                val_loss, noisy_spec = model.compute_loss(original_spec, mask, synthesized_spec)
                             target_residual = [None for _ in range(len(original_spec))]
-                            
                         all_val_loss.append(val_loss.item())
                     
                         ## logging result spectrums
                         if val_num == 1:
                             z = synthesized_spec + torch.randn_like(synthesized_spec, device=device) / 1.5
                             # Generate sample by performing reverse dynamics
-                            pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
+                            if config['main']['multi_speaker']:
+                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=speakers)
+                            else:
+                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
                             for i in range(3):
                                 logging(logger, config, original_spec[i], synthesized_spec[i], target_residual[i], noisy_spec[i], pred[i], mask[i], \
                                         f'image{i}_epoch{epoch}', step)
@@ -121,7 +141,7 @@ def resgrad_train(args, config):
             loop.set_postfix(train_loss=avg_train_loss, val_loss=avg_val_loss)
         
         ## Save checkpoints
-        torch.save(model.state_dict(), os.path.join(config['resgrade']['save_path'], f'ResGrad_epoch{epoch}.pth'))
-        torch.save(optimizer.state_dict(), os.path.join(config['resgrade']['save_path'], 'optimizer.pth'))
+        torch.save(model.state_dict(), os.path.join(config['train']['save_model_path'], f'ResGrad_epoch{epoch}.pth'))
+        torch.save(optimizer.state_dict(), os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
    
 

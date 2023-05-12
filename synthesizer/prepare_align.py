@@ -1,12 +1,12 @@
 import argparse
 
-from .preprocessor import persian
-from ..utils import load_yaml_file
+from preprocessor import persian
+from utils.tools import load_yaml_file
 
 
 def main(config):
-    if "Persian" in config["dataset"]:
-        persian.prepare_align(config)
+    if "Persian" in config["main"]["dataset"]:
+        persian.prepare_align(config['synthesizer']['preprocess'])
 
 
 if __name__ == "__main__":
@@ -15,4 +15,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = load_yaml_file(args.config)
-    main(config['synthesizer']['preprocess'])
+    main(config)

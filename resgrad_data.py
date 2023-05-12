@@ -3,6 +3,7 @@ from synthesizer.synthesize import infer as synthesizer_infer
 
 import argparse
 import os
+import csv
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -39,27 +40,44 @@ def main():
     text_data = read_input_data(args.raw_data_path)
     print("{} text input is loaded.".format(len(text_data)))
 
-    current_path = os.getcwd()
-    duration_dir = os.path.join(current_path, config['resgrad']['data']['durations_dir'])
-    mel_pred_dir = os.path.join(current_path, config['resgrad']['data']['input_data_dir'])
-    mel_target_dir = os.path.join(current_path, config['resgrad']['data']['target_data_dir'])
+    # duration_dir = os.path.join(current_path, config['resgrad']['data']['durations_dir'])
+    mel_pred_dir = os.path.join(config['resgrad']['data']['input_mel_dir'])
+    # mel_target_dir = os.path.join(current_path, config['resgrad']['data']['target_data_dir'])
 
     os.makedirs(mel_pred_dir, exist_ok=True)
-    if not os.path.islink(mel_target_dir):
-        os.symlink(os.path.join(current_path, config['synthesizer']['preprocess']['path']['preprocessed_path'], 'mel'), mel_target_dir, target_is_directory=True)
-    if not os.path.islink(duration_dir):
-        os.symlink(os.path.join(current_path, config['synthesizer']['preprocess']['path']['preprocessed_path'], 'duration'), duration_dir, target_is_directory=True)
+    # if not os.path.islink(mel_target_dir):
+    #     os.symlink(os.path.join(current_path, config['synthesizer']['preprocess']['path']['preprocessed_path'], 'mel'), mel_target_dir, target_is_directory=True)
+    # if not os.path.islink(duration_dir):
+    #     os.symlink(os.path.join(current_path, config['synthesizer']['preprocess']['path']['preprocessed_path'], 'duration'), duration_dir, target_is_directory=True)
 
+    resgrad_data = []
     device = config['synthesizer']['main']['device']
+    # i = 0
     for (speaker, file_name), text in tqdm(text_data.items()):
+        # i +=1 
+        # if i>30:
+        #     break
         dur_file_name = speaker + "-duration-" + file_name + ".npy"
-        dur_target = torch.from_numpy(np.load(os.path.join(duration_dir, dur_file_name))).to(device).unsqueeze(0)
+        dur_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'duration', dur_file_name)
 
+        mel_target_file_name = speaker + "-mel-" + file_name + ".npy"
+        mel_target_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'mel', mel_target_file_name)
+
+        ### Synthersize mel-spectrum and save as data for resgrad
+        dur_target = torch.from_numpy(np.load(dur_path)).to(device).unsqueeze(0)
         control_values = 1.0,1.0,1.0
         mel_prediction, _, _, _ = synthesizer_infer(synthesizer_model, text, control_values, config['synthesizer']['preprocess'], 
                                                     device, d_target=dur_target)
-        file_path = os.path.join(mel_pred_dir, file_name)
-        np.save(file_path, mel_prediction[0].cpu())
+        mel_pred_path = os.path.join(mel_pred_dir, speaker + "-pred_mel-" + file_name + ".npy")
+        np.save(mel_pred_path, mel_prediction.cpu())
+
+        resgrad_data.append({'speaker': speaker, 'predicted_mel':mel_pred_path, 'target_mel':mel_target_path, 'duration':dur_path})
+
+    with open(config['resgrad']['data']['metadata_path'], 'w') as file: 
+        fields = ['speaker', 'predicted_mel', 'target_mel', 'duration']
+        writer = csv.DictWriter(file, fieldnames = fields)
+        writer.writeheader() 
+        writer.writerows(resgrad_data)
 
 
 if __name__ == "__main__":

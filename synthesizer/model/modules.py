@@ -1,7 +1,5 @@
 import os
 import json
-import copy
-import math
 from collections import OrderedDict
 
 import torch
@@ -10,6 +8,24 @@ import numpy as np
 import torch.nn.functional as F
 
 from ..utils.tools import get_mask_from_lengths, pad
+
+
+class SpeakerIntegrator(nn.Module):
+    """ Speaker Integrator """
+
+    def __init__(self):
+        super(SpeakerIntegrator, self).__init__()
+
+    def forward(self, x, spembs):
+        """
+        x      shape : (batch, 39, 256)
+        spembs shape : (batch, 256)
+        """
+        spembs = spembs.unsqueeze(1)
+        spembs = spembs.repeat(1, x.shape[1], 1)
+        x = x + spembs
+
+        return x
 
 
 class VarianceAdaptor(nn.Module):

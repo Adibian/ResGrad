@@ -2,8 +2,8 @@
 ####################################### Main Config ########################################
 ############################################################################################
 main:
-  dataset: &Dataset "Persian"
-  multi_speaker: False
+  dataset: &Dataset "MS_Persian"
+  multi_speaker: True
 
 
 
