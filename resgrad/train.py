@@ -16,22 +16,22 @@ def logging(logger, config, original_spec, synthesized_spec, target_residual, no
     original_spec = original_spec[:,:start_zero_index]
     synthesized_spec = synthesized_spec[:,:start_zero_index]
     noisy_spec = noisy_spec[:,:start_zero_index]
-    if config['resgrad']['model_type1'] == "spec2residual":
+    if config['model']['model_type1'] == "spec2residual":
         target_residual = target_residual[:,:start_zero_index]
         pred_residual = pred[:,:start_zero_index]
-        if config['resgrad']['normallize_residual']:
-            pred_spec = denormalize_residual(pred[:,:start_zero_index]) + synthesized_spec
+        if config['data']['normallize_residual']:
+            pred_spec = denormalize_residual(pred[:,:start_zero_index], config) + synthesized_spec
         else:
             pred_spec = pred[:,:start_zero_index] + synthesized_spec
-        logger.add_image(f'{title}/target_residual_spec', plot_tensor(target_residual.squeeze().cpu().detach().numpy(), "residual"), global_step=step, dataformats='HWC')
-        logger.add_image(f'{title}/predicted_residual_spec', plot_tensor(pred_residual.squeeze().cpu().detach().numpy(), "residual"), global_step=step, dataformats='HWC')
+        logger.add_image(f'{title}/target_residual_spec', plot_tensor(target_residual.squeeze().cpu().detach().numpy(), "residual", config), global_step=step, dataformats='HWC')
+        logger.add_image(f'{title}/predicted_residual_spec', plot_tensor(pred_residual.squeeze().cpu().detach().numpy(), "residual", config), global_step=step, dataformats='HWC')
     else:
         pred_spec = pred[:,:start_zero_index]
     
-    logger.add_image(f'{title}/input_spec', plot_tensor(synthesized_spec.squeeze().cpu().detach().numpy(), "spectrum"), global_step=step, dataformats='HWC')
-    logger.add_image(f'{title}/predicted_spec', plot_tensor(pred_spec.squeeze().cpu().detach().numpy(), "spectrum"), global_step=step, dataformats='HWC')
-    logger.add_image(f'{title}/target_spec', plot_tensor(original_spec.squeeze().cpu().detach().numpy(), "spectrum"), global_step=step, dataformats='HWC')
-    logger.add_image(f'{title}/noisy_spec', plot_tensor(noisy_spec.squeeze().cpu().detach().numpy(), "noisy_spectrum"), global_step=step, dataformats='HWC')
+    logger.add_image(f'{title}/input_spec', plot_tensor(synthesized_spec.squeeze().cpu().detach().numpy(), "spectrum", config), global_step=step, dataformats='HWC')
+    logger.add_image(f'{title}/predicted_spec', plot_tensor(pred_spec.squeeze().cpu().detach().numpy(), "spectrum", config), global_step=step, dataformats='HWC')
+    logger.add_image(f'{title}/target_spec', plot_tensor(original_spec.squeeze().cpu().detach().numpy(), "spectrum", config), global_step=step, dataformats='HWC')
+    logger.add_image(f'{title}/noisy_spec', plot_tensor(noisy_spec.squeeze().cpu().detach().numpy(), "noisy_spectrum", config), global_step=step, dataformats='HWC')
 
 
 def resgrad_train(args, config):

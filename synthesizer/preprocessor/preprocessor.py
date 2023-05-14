@@ -62,7 +62,7 @@ class Preprocessor:
         for i, speaker in enumerate(speakers_list):
             speakers[speaker] = i
             loop = tqdm(os.listdir(os.path.join(self.in_dir, speaker)))
-            loop.set_description(f'speaker count = {i+1}/{len(speakers)}')
+            loop.set_description(f'speaker count = {i+1}/{len(speakers_list)}')
             for wav_name in loop:
                 if ".wav" not in wav_name:
                     continue
@@ -167,8 +167,6 @@ class Preprocessor:
 
         # Read and trim wav files
         wav, _ = librosa.load(wav_path, sr=None)
-        
-        
         wav = wav[
             int(self.sampling_rate * start) : int(self.sampling_rate * end)
         ].astype(np.float32)
@@ -184,10 +182,6 @@ class Preprocessor:
             frame_period=self.hop_length / self.sampling_rate * 1000,
         )
         pitch = pw.stonemask(wav.astype(np.float64), pitch, t, self.sampling_rate)
-
-        pitch = pitch[: sum(duration)]
-        if np.sum(pitch != 0) <= 1:
-            return None
         
         wav = torch.FloatTensor(wav)
         wav = wav.unsqueeze(0)
@@ -196,8 +190,16 @@ class Preprocessor:
                                         self.preprocessing_confing["stft"]["hop_length"], self.preprocessing_confing["stft"]["win_length"], \
                                         self.preprocessing_confing["mel"]["mel_fmin"], self.preprocessing_confing["mel"]["mel_fmax"], center=False)
 
+        ## Matching tensors size
+        min_size = min(sum(duration), mel_spectrogram.shape[1], energy.shape[0], pitch.shape[0])
+        duration[-1] = duration[-1] + (min_size - sum(duration))
         mel_spectrogram = mel_spectrogram[:, : sum(duration)]
         energy = energy[: sum(duration)]
+        pitch = pitch[: sum(duration)]
+        
+        if np.sum(pitch != 0) <= 1:
+            return None
+        
         if self.pitch_phoneme_averaging:
             # perform linear interpolation
             nonzero_ids = np.where(pitch != 0)[0]

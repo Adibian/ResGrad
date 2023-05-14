@@ -22,8 +22,8 @@ class SpectumDataset(Dataset):
             csv_reader = csv.DictReader(csv_file)
             line_count = 0
             for row in csv_reader:
-                if line_count != 0:
-                    line_count += 1
+                line_count += 1
+                if line_count > 1:
                     self.input_data_path.append(row['predicted_mel'])
                     self.target_data_path.append(row['target_mel'])
                     self.duration_data_path.append(row['duration'])
@@ -75,7 +75,7 @@ class SpectumDataset(Dataset):
         
         residual_spec = target_spec - input_spec
         if self.config['data']['normallize_residual']:
-            residual_spec = normalize_residual(residual_spec)
+            residual_spec = normalize_residual(residual_spec, self.config)
 
         mask = torch.ones((1, input_spec.shape[-1]))
         mask[:,spec_size:] = 0
@@ -84,8 +84,8 @@ class SpectumDataset(Dataset):
 
         if self.config['model']['model_type1'] == "spec2residual":
             residual_spec = target_spec - input_spec
-            if self.config.normallize_residual:
-                residual_spec = normalize_residual(residual_spec)
+            if self.config['data']['normallize_residual']:
+                residual_spec = normalize_residual(residual_spec, self.config)
             residual_spec = residual_spec*mask
             return input_spec, target_spec, residual_spec, mask, speaker
         else:

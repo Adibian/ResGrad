@@ -86,7 +86,7 @@ synthesizer:
       anneal_steps: [300000, 400000, 500000]
       anneal_rate: 0.3
     step:
-      total_step: 1010000
+      total_step: 2010000
       log_step: 500
       synth_step: 1000
       val_step: 1000
@@ -98,7 +98,10 @@ synthesizer:
 ########################################### ResGrad ########################################
 ############################################################################################
 resgrad:
-
+  ############ Main Parameters #################
+  main:
+    device: "cuda"
+    
   #################### Data #####################
   data:
     batch_size: 32
@@ -138,7 +141,5 @@ resgrad:
     beta_max: 20.0
     pe_scale: 1000
 
-  ############ Main Parameters #################
-  main:
-    device: "cuda"
+
 

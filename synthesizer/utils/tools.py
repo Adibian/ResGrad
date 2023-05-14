@@ -138,12 +138,12 @@ def synth_one_sample(targets, predictions, vocoder, model_config, preprocess_con
             vocoder,
             mel_target.unsqueeze(0),
             preprocess_config["preprocessing"]["audio"]["max_wav_value"],
-        )[0]
+        )
         wav_prediction = vocoder_infer(
             vocoder,
             mel_prediction.unsqueeze(0),
             preprocess_config["preprocessing"]["audio"]["max_wav_value"],
-        )[0]
+        )
     else:
         wav_reconstruction = wav_prediction = None
 

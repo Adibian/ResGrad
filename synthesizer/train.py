@@ -17,7 +17,7 @@ from .evaluate import evaluate
 def train_model(args, config):
     print("Prepare training ...")
 
-    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model']. config['synthesizer']['train']
+    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model'], config['synthesizer']['train']
     device = config['synthesizer']['main']['device']
     # Get dataset
     dataset = Dataset(

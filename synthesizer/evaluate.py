@@ -7,7 +7,7 @@ from .dataset import Dataset
 
 
 def evaluate(model, step, config, logger=None, vocoder=None):
-    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model']. config['synthesizer']['train']
+    preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model'], config['synthesizer']['train']
     device = config['synthesizer']['main']['device']
     # Get dataset
     dataset = Dataset(
