@@ -14,7 +14,7 @@ def save_result(mel_prediction, wav, pitch, energy, preprocess_config, result_di
     with open(os.path.join(preprocess_config["path"]["preprocessed_path"], "stats.json")) as f:
         stats = json.load(f)
         stats = stats["pitch"] + stats["energy"][:2]
-    fig = plot_mel([(mel_prediction.cpu().numpy(), pitch, energy)], stats, ["Synthetized Spectrogram"])
+    fig = plot_mel([(mel_prediction.cpu().numpy(), pitch.cpu().numpy(), energy.cpu().numpy())], stats, ["Synthetized Spectrogram"])
     plt.savefig(os.path.join(result_dir, "{}.png".format(file_name)))
     plt.close()
 
@@ -27,10 +27,11 @@ def load_models(all_restore_step, config):
     device = config['synthesizer']['main']['device']
     if all_restore_step['synthesizer'] not in [None, 0]:
         synthesizer_model = load_synthesizer_model(all_restore_step['synthesizer'], config).to(device)
-    if all_restore_step['resgrad'] not in [None, 0]:
-        resgrad_model = load_resgrad_model(train=False, restore_model_epoch=all_restore_step['regrad']).to(device)
     if all_restore_step['vocoder'] not in [None, 0]:
         vocoder_model = get_vocoder(all_restore_step['vocoder']).to(device)
+    device = config['resgrad']['main']['device']
+    if all_restore_step['resgrad'] not in [None, 0]:
+        resgrad_model = load_resgrad_model(config['resgrad'], train=False, restore_model_epoch=all_restore_step['resgrad']).to(device)
     return synthesizer_model, resgrad_model, vocoder_model
 
 def load_yaml_file(path):

@@ -7,20 +7,23 @@ synthesizer/*.npy
 vocoder/ckpt/g_2500000_persian
 vocoder/ckpt/g_2500000
 
-
-## Others
-dataset/Persian/synthesizer_data/*
-dataset/Persian/resgrad_data/*
-
-dataset/MS_Persian/synthesizer_data/*
-dataset/MS_Persian/resgrad_data/*
-
+## Outputs
 output/Persian/synthesizer/*
 output/Persian/resgrad/*
 output/Persian/results/*
 output/reserved/*
 
+output/Persian/dur_target_pitch_pred/*
+output/Persian/dur_target_pitch_target/*
+output/Persian/dur_target_pitch_target_new_optim/*
 
+## Data
+dataset/Persian/synthesizer_data/*
+dataset/Persian/resgrad_data/*
+dataset/MS_Persian/synthesizer_data/*
+dataset/MS_Persian/resgrad_data/*
+
+## Others
 commands.txt
 *__pycache__/
 

@@ -7,7 +7,7 @@ import csv
 from tqdm import tqdm
 import numpy as np
 import torch
-
+import json
 
 def read_input_data(data_file_path):
     input_texts = {}
@@ -35,6 +35,9 @@ def main():
     text_data = read_input_data(args.data_file_path)
     print("{} inputs data is loaded.".format(len(text_data)))
 
+    with open(os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], "speakers.json")) as f:
+        speaker_map = json.load(f)
+
     mel_pred_dir = os.path.join(config['resgrad']['data']['input_mel_dir'])
     os.makedirs(mel_pred_dir, exist_ok=True)
 
@@ -46,16 +49,19 @@ def main():
         # if i>30:
         #     break
         dur_file_name = speaker + "-duration-" + file_name + ".npy"
+        pitch_file_name = speaker + "-pitch-" + file_name + ".npy"
         dur_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'duration', dur_file_name)
+        pitch_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'pitch', pitch_file_name)
 
         mel_target_file_name = speaker + "-mel-" + file_name + ".npy"
         mel_target_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'mel', mel_target_file_name)
 
         ### Synthersize mel-spectrum and save as data for resgrad
         dur_target = torch.from_numpy(np.load(dur_path)).to(device).unsqueeze(0)
+        pitch_target = torch.from_numpy(np.load(pitch_path)).to(device).unsqueeze(0)
         control_values = 1.0,1.0,1.0
         mel_prediction, _, _, _ = synthesizer_infer(synthesizer_model, text, control_values, config['synthesizer']['preprocess'], 
-                                                    device, d_target=dur_target)
+                                                    device, speaker=speaker_map[speaker], d_target=dur_target, p_target=pitch_target)
 
         mel_pred_path = os.path.join(mel_pred_dir, speaker + "-pred_mel-" + file_name + ".npy")
         np.save(mel_pred_path, mel_prediction.cpu())

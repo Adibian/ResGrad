@@ -107,7 +107,7 @@ resgrad:
     metadata_path: !join ["dataset/", *Dataset, "resgrad_data/metadata.csv"]
     input_mel_dir: !join ["dataset/", *Dataset, "resgrad_data/input_mel"]
     speaker_map_path: !join ["synthesizer/preprocessed_data", *Dataset, "speakers.json"]
-    val_size: 16
+    val_size: 128
     preprocessed_path: "processed_data"
     normalized_method: "min-max"
 
@@ -122,11 +122,22 @@ resgrad:
 
   ################## Training ###################
   train:
-    lr: 0.0001
-    epochs: 70
+    # lr: 0.0001
     save_model_path: !join ["output/", *Dataset, "resgrad/ckpt"]
-    validate_every_n_step: 20
     log_dir: !join ["output/", *Dataset, "resgrad/log"]
+    total_steps: 100000
+    save_ckpt_step: 10000
+    validate_step: 100
+
+  optimizer:
+    betas: [0.9, 0.98]
+    eps: 0.000000001
+    weight_decay: 0.0
+    grad_clip_thresh: 1.0
+    grad_acc_step: 1
+    warm_up_step: 4000
+    anneal_steps: [10000, 20000, 30000]
+    anneal_rate: 0.3
 
   ############ Model Parameters #################
   model:

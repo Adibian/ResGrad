@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import os
 from .model import Diffusion
-
+from .model.optimizer import ScheduledOptim
 
 def save_figure_to_numpy(fig):
     data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
@@ -72,24 +72,30 @@ def denormalize_residual(residual_spec, config):
         print("normalized method is not supported!")
     return residual_spec
 
-def load_model(config, train=False, restore_model_epoch=0):
+def load_model(config, train=False, restore_model_step=0):
     model = Diffusion(n_feats=config['model']['n_feats'], dim=config['model']['dim'], n_spks=config['model']['n_spks'], \
                       spk_emb_dim=config['model']['spk_emb_dim'], beta_min=config['model']['beta_min'], \
                       beta_max=config['model']['beta_max'], pe_scale=config['model']['pe_scale'])
     model = model.to(config['main']['device'])
+    if restore_model_step > 0:
+        checkpoint = torch.load(os.path.join(config['train']['save_model_path'], f'ResGrad_step{restore_model_step}.pth'), \
+                                map_location=config['main']['device'])
+        # checkpoint = torch.load(os.path.join("/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/Persian/dur_taget_pitch_target/resgrad/ckpt", \
+        #                                      f'ResGrad_epoch{restore_model_epoch}.pth'), \
+        #                         map_location=config['main']['device'])
+        # model.load_state_dict(checkpoint["model"])
+        model.load_state_dict(checkpoint['model'])
 
     if train:
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=config['train']['lr'])
-    
-    if restore_model_epoch > 0:
-        checkpoint = torch.load(os.join(config['train']['save_model_path'], f'ResGrad{restore_model_epoch}.pth'), map_location=config['main']['device'])
-        model.load_state_dict(checkpoint)
-        if train:
-            optimizer_state = torch.load(os.join(config['train']['save_model_path'], 'optimizer.pth'))
-            optimizer.load_state_dict(optimizer_state)
+        # restore_step = 670*restore_model_step ## 670 is number of steps per epoch
+        scheduled_optim = ScheduledOptim(model, config, restore_model_step)
+        # optimizer = torch.optim.Adam(params=model.parameters(), lr=config['train']['lr'])
+        if restore_model_step > 0:
+            # optimizer_state = torch.load(os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
+            scheduled_optim.load_state_dict(checkpoint['optimizer'])
+            # optimizer.load_state_dict(optimizer_state)
+        model.train()
+        return model, scheduled_optim
 
-    if train:
-        return model, optimizer
-    else:
-        model.eval()        
-        return model
+    model.eval()        
+    return model

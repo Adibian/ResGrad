@@ -46,19 +46,30 @@ def resgrad_train(args, config):
     train_dataset, val_dataset = create_dataset(config)
     
     print("Load model...")
-    model, optimizer = load_model(config, train=True, restore_model_epoch=args.restore_epoch)
+    model, optimizer = load_model(config, train=True, restore_model_step=args.restore_step)
     
-    scaler = torch.cuda.amp.GradScaler()
+    # scaler = torch.cuda.amp.GradScaler()
+    grad_acc_step = config["optimizer"]["grad_acc_step"]
+    grad_clip_thresh = config["optimizer"]["grad_clip_thresh"]
 
-    step = 0
+    step = args.restore_step - 1
+    epoch = args.restore_step // (len(train_dataset)//config['data']['batch_size'] + 1)
     avg_val_loss = 0
     avg_train_loss = 0
+
     print("Start training...")
-    for epoch in range(config['train']['epochs']):
-        loop = tqdm(train_dataset)
+    outer_bar = tqdm(total=config['train']['total_steps'], desc="Total Training", position=0)
+    outer_bar.n = step  
+    outer_bar.update()
+
+    while True:
+        inner_bar = tqdm(total=len(train_dataset), desc="Epoch {}".format(epoch), position=1)
         train_loss_list = []
-        for train_data in loop:
+        epoch += 1
+        for train_data in train_dataset:
             step += 1
+            inner_bar.update(1)
+            outer_bar.update(1)
             if config['model']['model_type1'] == "spec2residual":
                 synthesized_spec, original_spec, residual_spec, mask, speakers = train_data
                 synthesized_spec = synthesized_spec.to(device)
@@ -81,13 +92,22 @@ def resgrad_train(args, config):
                 else:
                     loss, pred = model.compute_loss(original_spec, mask, synthesized_spec)
 
-            optimizer.zero_grad()
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-            train_loss_list.append(loss.item())
+            # optimizer.zero_grad()
+            # scaler.scale(loss).backward()
+            # scaler.step(optimizer)
+            # scaler.update()
+            # train_loss_list.append(loss.item())
 
-            if step % config['train']['validate_every_n_step'] == 0:
+            loss.backward()
+            train_loss_list.append(loss.item())
+            if step % grad_acc_step == 0:
+                # Clipping gradients to avoid gradient explosion
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
+                # Update weights
+                optimizer.step_and_update_lr()
+                optimizer.zero_grad()
+
+            if step % config['train']['validate_step'] == 0:
                 model.eval()
                 with torch.no_grad():
                     all_val_loss = []
@@ -128,7 +148,7 @@ def resgrad_train(args, config):
                                 pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
                             for i in range(3):
                                 logging(logger, config, original_spec[i], synthesized_spec[i], target_residual[i], noisy_spec[i], pred[i], mask[i], \
-                                        f'image{i}_epoch{epoch}', step)
+                                        f'image{i}_step{step}', step)
 
                 avg_val_loss = sum(all_val_loss) / len(all_val_loss)
                 logger.add_scalar('validation/loss', avg_val_loss,  global_step=step)
@@ -137,11 +157,22 @@ def resgrad_train(args, config):
                 train_loss_list = []
                 model.train()
 
-            loop.set_description(f'Epoch {epoch}, Step {step}: ')
-            loop.set_postfix(train_loss=avg_train_loss, val_loss=avg_val_loss)
-        
-        ## Save checkpoints
-        torch.save(model.state_dict(), os.path.join(config['train']['save_model_path'], f'ResGrad_epoch{epoch}.pth'))
-        torch.save(optimizer.state_dict(), os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
+            inner_bar.set_postfix(train_loss=avg_train_loss, val_loss=avg_val_loss)
+
+            if step % config['train']['save_ckpt_step'] == 0:
+                ## Save checkpoints
+                torch.save(
+                    {
+                        "model": model.state_dict(),
+                        "optimizer": optimizer._optimizer.state_dict(),
+                    },
+                    os.path.join(config['train']['save_model_path'], f'ResGrad_step{step}.pth')
+                )
+                # torch.save(model.state_dict(), os.path.join(config['train']['save_model_path'], f'ResGrad_step{step}.pth'))
+                # torch.save(optimizer.state_dict(), os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
+
+            if step > config['train']['total_steps']:
+                quit()
+
    
 

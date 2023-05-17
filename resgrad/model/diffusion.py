@@ -239,7 +239,7 @@ class Diffusion(BaseModule):
         
         self.estimator = GradLogPEstimator2d(dim, n_spks=n_spks,
                                              spk_emb_dim=spk_emb_dim,
-                                             pe_scale=pe_scale)
+                                             pe_scale=pe_scale, n_feats=n_feats)
 
     def forward_diffusion(self, x0, mask, mu, t):
         time = t.unsqueeze(-1).unsqueeze(-1)
