@@ -1,0 +1,154 @@
+############################################################################################
+####################################### Main Config ########################################
+############################################################################################
+main:
+  dataset: &Dataset "LJSpeech"
+  multi_speaker: False
+
+
+
+############################################################################################
+####################################### Synthesizer ########################################
+############################################################################################
+synthesizer:
+  ############### Main Parameters ###################
+  main:
+    device: "cuda" ## cpu or cuda
+
+  ##################### Model #######################
+  model:
+    transformer:
+      encoder_layer: 4
+      encoder_head: 2
+      encoder_hidden: 256
+      decoder_layer: 6
+      decoder_head: 2
+      decoder_hidden: 256
+      conv_filter_size: 1024
+      conv_kernel_size: [9, 1]
+      encoder_dropout: 0.2
+      decoder_dropout: 0.2
+
+    variance_predictor:
+      filter_size: 256
+      kernel_size: 3
+      dropout: 0.5
+
+    variance_embedding:
+      pitch_quantization: "linear" # support 'linear' or 'log', 'log' is allowed only if the pitch values are not normalized during preprocessing
+      energy_quantization: "linear" # support 'linear' or 'log', 'log' is allowed only if the energy values are not normalized during preprocessing
+      n_bins: 256
+    max_seq_len: 1000
+
+  #################### Preprocesss #####################
+  preprocess:
+    path:
+      corpus_path: !join ["dataset/", *Dataset, "synthesizer_data/train_data"]
+      raw_path: !join ["synthesizer/raw_data/", *Dataset]
+      preprocessed_path: !join ["synthesizer/preprocessed_data/", *Dataset]
+    preprocessing:
+      val_size: 100
+      text:
+        text_cleaners: ["persian_cleaners"] ## ljspeech_cleaner od persian_cleaner
+        language: "fa"  ## fa or en
+      audio:
+        sampling_rate: 22050
+        max_wav_value: 32768.0
+      stft:
+        filter_length: 1024
+        hop_length: 256
+        win_length: 1024
+      mel:
+        n_mel_channels: 80
+        mel_fmin: 0
+        mel_fmax: 8000
+      pitch:
+        feature: "phoneme_level" # support 'phoneme_level' or 'frame_level'
+        normalization: True
+      energy:
+        feature: "phoneme_level" # support 'phoneme_level' or 'frame_level'
+        normalization: True
+
+  #################### Training #####################
+  train:
+    path:
+      ckpt_path: !join ["output/", *Dataset, "synthesizer/ckpt"]
+      log_path: !join ["output/", *Dataset, "synthesizer/log"]
+      result_path: !join ["output/", *Dataset, "synthesizer/result"]
+    optimizer:
+      batch_size: 16
+      betas: [0.9, 0.98]
+      eps: 0.000000001
+      weight_decay: 0.0
+      grad_clip_thresh: 1.0
+      grad_acc_step: 1
+      warm_up_step: 4000
+      anneal_steps: [300000, 400000, 500000]
+      anneal_rate: 0.3
+    step:
+      total_step: 1010000
+      log_step: 500
+      synth_step: 1000
+      val_step: 1000
+      save_step: 100000
+
+
+############################################################################################
+########################################### ResGrad ########################################
+############################################################################################
+resgrad:
+  ############ Main Parameters #################
+  main:
+    device: "cuda"
+
+  #################### Data #####################
+  data:
+    batch_size: 32
+    metadata_path: !join ["dataset/", *Dataset, "resgrad_data/metadata.csv"]
+    input_mel_dir: !join ["dataset/", *Dataset, "resgrad_data/input_mel"]
+    speaker_map_path: !join ["synthesizer/preprocessed_data", *Dataset, "speakers.json"]
+    val_size: 128
+    preprocessed_path: "processed_data"
+    normalized_method: "min-max"
+
+    shuffle_data: True
+    normallize_spectrum: True
+    min_spec_value: -13
+    max_spec_value: 3
+    normallize_residual: True
+    min_residual_value: -0.25
+    max_residual_value: 0.25
+    max_win_length: 100  ## maximum size of window in spectrum
+
+  ################## Training ###################
+  train:
+    lr: 0.0001
+    save_model_path: !join ["output/", *Dataset, "resgrad/ckpt"]
+    log_dir: !join ["output/", *Dataset, "resgrad/log"]
+    total_steps: 100000
+    save_ckpt_step: 10000
+    validate_step: 100
+
+  # optimizer:
+  #   betas: [0.9, 0.98]
+  #   eps: 0.000000001
+  #   weight_decay: 0.0
+  #   grad_clip_thresh: 1.0
+  #   grad_acc_step: 1
+  #   warm_up_step: 4000
+  #   anneal_steps: [10000, 20000, 30000]
+  #   anneal_rate: 0.3
+
+  ############ Model Parameters #################
+  model:
+    model_type1: "spec2residual"  ## "spec2spec" or "spec2residual"
+    model_type2: "segment-based"  ## "segment-based" or "sentence-based"
+    n_feats: 80
+    dim: 64
+    n_spks: 1
+    spk_emb_dim: 64
+    beta_min: 0.05
+    beta_max: 20.0
+    pe_scale: 1000
+
+
