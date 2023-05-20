@@ -122,22 +122,22 @@ resgrad:
 
   ################## Training ###################
   train:
-    # lr: 0.0001
+    lr: 0.0001
     save_model_path: !join ["output/", *Dataset, "resgrad/ckpt"]
     log_dir: !join ["output/", *Dataset, "resgrad/log"]
     total_steps: 100000
     save_ckpt_step: 10000
     validate_step: 100
 
-  optimizer:
-    betas: [0.9, 0.98]
-    eps: 0.000000001
-    weight_decay: 0.0
-    grad_clip_thresh: 1.0
-    grad_acc_step: 1
-    warm_up_step: 4000
-    anneal_steps: [10000, 20000, 30000]
-    anneal_rate: 0.3
+  # optimizer:
+  #   betas: [0.9, 0.98]
+  #   eps: 0.000000001
+  #   weight_decay: 0.0
+  #   grad_clip_thresh: 1.0
+  #   grad_acc_step: 1
+  #   warm_up_step: 4000
+  #   anneal_steps: [10000, 20000, 30000]
+  #   anneal_rate: 0.3
 
   ############ Model Parameters #################
   model:

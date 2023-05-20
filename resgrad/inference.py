@@ -66,7 +66,7 @@ def infer(model, mel_prediction, duration_prediction, speaker, config):
         batch_size = config['data']['batch_size']
         for i in range(0, segment_spec.shape[0], batch_size):
             segments_pred = model(z[i:i+batch_size], mask[i:i+batch_size], segment_spec[i:i+batch_size], \
-                                                  n_timesteps=50, stoc=False, spk=speaker)
+                                                  n_timesteps=25, stoc=False, spk=speaker)
 
         for i in range(len(segments_pred)):
             segment_pred = segments_pred[i,:,:all_spec_size[i]]

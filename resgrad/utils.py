@@ -83,19 +83,17 @@ def load_model(config, train=False, restore_model_step=0):
         # checkpoint = torch.load(os.path.join("/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/Persian/dur_taget_pitch_target/resgrad/ckpt", \
         #                                      f'ResGrad_epoch{restore_model_epoch}.pth'), \
         #                         map_location=config['main']['device'])
-        # model.load_state_dict(checkpoint["model"])
         model.load_state_dict(checkpoint['model'])
 
     if train:
-        # restore_step = 670*restore_model_step ## 670 is number of steps per epoch
-        scheduled_optim = ScheduledOptim(model, config, restore_model_step)
-        # optimizer = torch.optim.Adam(params=model.parameters(), lr=config['train']['lr'])
+        # scheduled_optim = ScheduledOptim(model, config, restore_model_step)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=config['train']['lr'])
         if restore_model_step > 0:
-            # optimizer_state = torch.load(os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
-            scheduled_optim.load_state_dict(checkpoint['optimizer'])
-            # optimizer.load_state_dict(optimizer_state)
+            optimizer_state = torch.load(os.path.join(config['train']['save_model_path'], 'optimizer.pth'))
+            # scheduled_optim.load_state_dict(checkpoint['optimizer'])
+            optimizer.load_state_dict(optimizer_state)
         model.train()
-        return model, scheduled_optim
+        return model, optimizer
 
     model.eval()        
     return model

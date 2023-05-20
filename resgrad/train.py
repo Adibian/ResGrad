@@ -48,9 +48,9 @@ def resgrad_train(args, config):
     print("Load model...")
     model, optimizer = load_model(config, train=True, restore_model_step=args.restore_step)
     
-    # scaler = torch.cuda.amp.GradScaler()
-    grad_acc_step = config["optimizer"]["grad_acc_step"]
-    grad_clip_thresh = config["optimizer"]["grad_clip_thresh"]
+    scaler = torch.cuda.amp.GradScaler()
+    # grad_acc_step = config["optimizer"]["grad_acc_step"]
+    # grad_clip_thresh = config["optimizer"]["grad_clip_thresh"]
 
     step = args.restore_step - 1
     epoch = args.restore_step // (len(train_dataset)//config['data']['batch_size'] + 1)
@@ -92,20 +92,20 @@ def resgrad_train(args, config):
                 else:
                     loss, pred = model.compute_loss(original_spec, mask, synthesized_spec)
 
-            # optimizer.zero_grad()
-            # scaler.scale(loss).backward()
-            # scaler.step(optimizer)
-            # scaler.update()
-            # train_loss_list.append(loss.item())
-
-            loss.backward()
+            optimizer.zero_grad()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             train_loss_list.append(loss.item())
-            if step % grad_acc_step == 0:
-                # Clipping gradients to avoid gradient explosion
-                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
-                # Update weights
-                optimizer.step_and_update_lr()
-                optimizer.zero_grad()
+
+            # loss.backward()
+            # train_loss_list.append(loss.item())
+            # if step % grad_acc_step == 0:
+            #     # Clipping gradients to avoid gradient explosion
+            #     torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
+            #     # Update weights
+            #     optimizer.step_and_update_lr()
+            #     optimizer.zero_grad()
 
             if step % config['train']['validate_step'] == 0:
                 model.eval()
@@ -164,7 +164,8 @@ def resgrad_train(args, config):
                 torch.save(
                     {
                         "model": model.state_dict(),
-                        "optimizer": optimizer._optimizer.state_dict(),
+                        "optimizer": optimizer.state_dict()
+                        # "optimizer": optimizer._optimizer.state_dict(),
                     },
                     os.path.join(config['train']['save_model_path'], f'ResGrad_step{step}.pth')
                 )
