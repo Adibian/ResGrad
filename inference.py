@@ -49,25 +49,25 @@ def infer():
     RTF_FastSpeech = FastSpeech_process_time / wav_length
     print("FastSpeech2 RTF: {:.6f}".format(RTF_FastSpeech))
 
-    ## ResGrad
-    print("Inference from ResGrad...")
-    start_time = time.time()
-    mel_prediction = resgrad_infer(resgrad_model, mel_prediction, duration_prediction, args.speaker_id, config['resgrad'])
-    end_time = time.time()
-    ResGrad_process_time = end_time-start_time
+    # ## ResGrad
+    # print("Inference from ResGrad...")
+    # start_time = time.time()
+    # mel_prediction = resgrad_infer(resgrad_model, mel_prediction, duration_prediction, args.speaker_id, config['resgrad'])
+    # end_time = time.time()
+    # ResGrad_process_time = end_time-start_time
 
-    ## Vocoder
-    wav = vocoder_infer(vocoder_model, mel_prediction, config['synthesizer']['preprocess']["preprocessing"]["audio"]["max_wav_value"])
+    # ## Vocoder
+    # wav = vocoder_infer(vocoder_model, mel_prediction, config['synthesizer']['preprocess']["preprocessing"]["audio"]["max_wav_value"])
 
-    ## Save result
-    print("Save ResGrad result...")
-    file_name = file_name.replace("FastSpeech", "ResGrad")
-    save_result(mel_prediction.squeeze(), wav, pitch_prediction, energy_prediction, config['synthesizer']['preprocess'], args.result_dir, file_name)
+    # ## Save result
+    # print("Save ResGrad result...")
+    # file_name = file_name.replace("FastSpeech", "ResGrad")
+    # save_result(mel_prediction.squeeze(), wav, pitch_prediction, energy_prediction, config['synthesizer']['preprocess'], args.result_dir, file_name)
 
-    ## Real-Time factor of ResGrad
-    wav_length = len(wav)/config['synthesizer']['preprocess']["preprocessing"]["audio"]["sampling_rate"]
-    RTF_ResGrad = ResGrad_process_time / wav_length
-    print("ResGrad RTF: {:.6f}".format(RTF_ResGrad))
+    # ## Real-Time factor of ResGrad
+    # wav_length = len(wav)/config['synthesizer']['preprocess']["preprocessing"]["audio"]["sampling_rate"]
+    # RTF_ResGrad = ResGrad_process_time / wav_length
+    # print("ResGrad RTF: {:.6f}".format(RTF_ResGrad))
 
 
 if __name__ == "__main__":

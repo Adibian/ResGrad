@@ -1,12 +1,14 @@
 import argparse
 
-from preprocessor import persian
+from preprocessor import persian, ljspeech
 from utils.tools import load_yaml_file
 
 
 def main(config):
     if "Persian" in config["main"]["dataset"]:
         persian.prepare_align(config['synthesizer']['preprocess'])
+    elif config["main"]["dataset"] == "LJSpeech":
+        ljspeech.prepare_align(config['synthesizer']['preprocess'])
 
 
 if __name__ == "__main__":

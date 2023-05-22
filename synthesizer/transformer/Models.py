@@ -4,7 +4,7 @@ import numpy as np
 
 from ..transformer import Constants
 from .Layers import FFTBlock
-from ..text.symbols import symbols
+from ..text.symbols import get_symbols
 
 
 def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
@@ -33,11 +33,11 @@ def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
 class Encoder(nn.Module):
     """ Encoder """
 
-    def __init__(self, config):
+    def __init__(self, config, language):
         super(Encoder, self).__init__()
 
         n_position = config["max_seq_len"] + 1
-        n_src_vocab = len(symbols) + 1
+        n_src_vocab = len(get_symbols('en')) + 1
         d_word_vec = config["transformer"]["encoder_hidden"]
         n_layers = config["transformer"]["encoder_layer"]
         n_head = config["transformer"]["encoder_head"]

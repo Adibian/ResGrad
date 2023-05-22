@@ -18,7 +18,7 @@ _arpabet = ["@" + s for s in cmudict.valid_symbols]
 _pinyin = ["@" + s for s in pinyin.valid_symbols]
 
 # Export all symbols:
-symbols = (
+english_symbols = (
     [_pad]
     + list(_special)
     + list(_punctuation)
@@ -29,9 +29,16 @@ symbols = (
 )
 
 ## for Persian Language
-persian_phonemes = ['U', 'Q', 'G', 'AA', 'V', 'N', 'CH', 'R', 'KH', 'B', 'Z', 'SH', 'O', 'A', 'E', 'ZH', 'H', 'SIL', 'AH', 'S', 'D', 'J', 'L', 'F', 'K', 'I', 'T', 'P', 'M', 'Y']
+persian_phonemes = ['U', 'Q', 'G', 'AA', 'V', 'N', 'CH', 'R', 'KH', 'B', 'Z', 'SH', 'O', 'A', 'E', 'ZH', 'H', 'SIL', 'AH', \
+                    'S', 'D', 'J', 'L', 'F', 'K', 'I', 'T', 'P', 'M', 'Y']
 persian_phonemes += ['?', '!', '.', ',', ';', ':']
 persian_symbols = (
     [_pad]
     + persian_phonemes
     )
+
+def get_symbols(language):
+    if language == "fa":
+        return persian_symbols
+    elif language == "en":
+        return english_symbols

@@ -79,7 +79,7 @@ def transliteration_cleaners(text):
     return text
 
 
-def english_cleaners(text):
+def english_cleaner(text):
     '''Pipeline for English text, including number and abbreviation expansion.'''
     text = convert_to_ascii(text)
     text = lowercase(text)
@@ -88,6 +88,6 @@ def english_cleaners(text):
     text = collapse_whitespace(text)
     return text
 
-def persian_cleaners(text):
+def persian_cleaner(text):
     text = collapse_whitespace(text)
     return text

@@ -43,14 +43,14 @@ synthesizer:
   #################### Preprocesss #####################
   preprocess:
     path:
-      corpus_path: !join ["dataset/", *Dataset, "synthesizer_data/train_data"]
+      corpus_path: !join ["dataset/", *Dataset, "synthesizer_data"]
       raw_path: !join ["synthesizer/raw_data/", *Dataset]
       preprocessed_path: !join ["synthesizer/preprocessed_data/", *Dataset]
     preprocessing:
       val_size: 100
       text:
-        text_cleaners: ["persian_cleaners"] ## ljspeech_cleaner od persian_cleaner
-        language: "fa"  ## fa or en
+        text_cleaners: "english_cleaner" ## english_cleaners or persian_cleaners
+        language: "en"  ## fa or en
       audio:
         sampling_rate: 22050
         max_wav_value: 32768.0
