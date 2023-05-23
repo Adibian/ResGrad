@@ -74,7 +74,7 @@ synthesizer:
     path:
       ckpt_path: !join ["output/", *Dataset, "synthesizer/ckpt"]
       log_path: !join ["output/", *Dataset, "synthesizer/log"]
-      result_path: !join ["output/", *Dataset, "synthesizer/result"]
+      # result_path: !join ["output/", *Dataset, "synthesizer/result"]
     optimizer:
       batch_size: 16
       betas: [0.9, 0.98]

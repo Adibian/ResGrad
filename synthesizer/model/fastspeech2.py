@@ -91,8 +91,8 @@ class FastSpeech2(nn.Module):
             d_control,
         ) 
 
-        if self.speaker_emb is not None:
-            output = output + self.speaker_vec.expand(-1, output.shape[1], -1)     
+        # if self.speaker_emb is not None:
+        #     output = output + self.speaker_vec.expand(-1, output.shape[1], -1)     
         
         output, mel_masks = self.decoder(output, mel_masks)
         output = self.mel_linear(output)

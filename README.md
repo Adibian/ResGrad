@@ -14,7 +14,7 @@ Coming soon...
 Coming soon...
 
 ## Financial assistance
-As you know, the implementation of these large models takes a lot of time, and training them costs a lot. If this implementation or trained models are useful, you can help to improve this implementation as well as future implementations by sending your financial assistance to the cryptocurrency wallet at the address ** . Thanks alot. 
+As you know, the implementation of these large models takes a lot of time, and training them costs a lot. If this implementation or trained models are useful, you can help to improve this implementation as well as future implementations by sending your financial assistance to the cryptocurrency wallet at the address ** . Thanks a lot. 
 
 ## References :notebook_with_decorative_cover:
 - [ResGrad: Residual Denoising Diffusion Probabilistic Models for Text to Speech](https://arxiv.org/abs/2212.14518), Z. Chen, *et al*.
