@@ -1,7 +1,7 @@
 My wallet address of some coins:
 
-Tether (USTT) on TRC address: TG9TRmD5qRBcc4fmQoNKVu9Y7q6zbg6cza
-Tether (USTT) on ERC address: 0x656aF465bF24edf8c752b76861E1879Eef7526e6
+Tether (USTT) address on TRC: TG9TRmD5qRBcc4fmQoNKVu9Y7q6zbg6cza
+Tether (USTT) address on ERC: 0x656aF465bF24edf8c752b76861E1879Eef7526e6
 Bitcoin (BTC) address: bc1qq8qzakjvd0xjaay9vcrj4x4f3szuttrv75dtl8
 Ethereum (ETH) address: 0x656aF465bF24edf8c752b76861E1879Eef7526e6
 
