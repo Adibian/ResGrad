@@ -16,7 +16,7 @@ class FastSpeech2(nn.Module):
         super(FastSpeech2, self).__init__()
         preprocess_config, model_config = config['synthesizer']['preprocess'], config['synthesizer']['model']
         self.model_config = model_config
-        self.device = config['synthesizer']['main']['device']
+        self.device = config['main']['device']
 
         self.encoder = Encoder(model_config, preprocess_config['preprocessing']['text']['language'])
         self.variance_adaptor = VarianceAdaptor(preprocess_config, model_config, self.device)

@@ -18,7 +18,7 @@ def train_model(args, config):
     print("Prepare training ...")
 
     preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model'], config['synthesizer']['train']
-    device = config['synthesizer']['main']['device']
+    device = config['main']['device']
     # Get dataset
     dataset = Dataset(
         "train.txt", preprocess_config, train_config, sort=True, drop_last=True
@@ -35,14 +35,18 @@ def train_model(args, config):
 
     # Prepare model
     model, optimizer = get_model(args.restore_step, config, train=True)
-    if device == 'cuda':
-        model = nn.DataParallel(model)
+    if "cuda" in device:
+        if "cuda" == device: ## If cuda id is not defined (use all GPUs)
+            model = nn.DataParallel(model)
+        else:
+            device_id = int(device.replace("cuda:", ""))
+            model = nn.DataParallel(model, device_ids=[device_id], output_device=[device_id])
     num_param = get_param_num(model)
     Loss = FastSpeech2Loss(preprocess_config, model_config).to(device)
     print("Number of FastSpeech2 Parameters:", num_param)
 
     # Load vocoder
-    vocoder = get_vocoder()
+    vocoder = get_vocoder(config['vocoder'], device)
 
     # Init logger
     for p in train_config["path"].values():

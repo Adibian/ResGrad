@@ -1,7 +1,7 @@
 from synthesizer.synthesize import infer as synthesizer_infer
 from resgrad.inference import infer as resgrad_infer
 from vocoder.inference import infer as vocoder_infer
-from utils import load_models, save_result, load_yaml_file
+from utils import load_models, save_result, load_yaml_file, get_file_name
 
 import argparse
 import time
@@ -33,7 +33,7 @@ def infer():
     start_time = time.time()
     mel_prediction, duration_prediction, pitch_prediction, energy_prediction = synthesizer_infer(synthesizer_model, args.text, control_values, \
                                                                                         config['synthesizer']['preprocess'], \
-                                                                                        config['synthesizer']['main']['device'], \
+                                                                                        config['main']['device'], \
                                                                                         speaker = args.speaker_id)
     end_time = time.time()
     FastSpeech_process_time = end_time-start_time
@@ -41,7 +41,7 @@ def infer():
     ## Save FastSpeech2 result as wav
     wav = vocoder_infer(vocoder_model, mel_prediction, config['synthesizer']['preprocess']["preprocessing"]["audio"]["max_wav_value"])
     print("Save FastSpeech2 result...")
-    file_name = "FastSpeech_" + str(time.time()).replace('.', '_') if not args.result_file_name else "FastSpeech_" + str(args.result_file_name)
+    file_name = get_file_name(args)
     save_result(mel_prediction, wav, pitch_prediction, energy_prediction, config['synthesizer']['preprocess'], args.result_dir, file_name)
 
     ## Real-Time factor of FastSpeech2

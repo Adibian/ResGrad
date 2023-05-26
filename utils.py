@@ -9,6 +9,7 @@ import json
 from scipy.io import wavfile
 from matplotlib import pyplot as plt
 import yaml
+import time
 
 def save_result(mel_prediction, wav, pitch, energy, preprocess_config, result_dir, file_name):
     with open(os.path.join(preprocess_config["path"]["preprocessed_path"], "stats.json")) as f:
@@ -44,3 +45,15 @@ def load_yaml_file(path):
     yaml.add_constructor('!join', join)
     data = yaml.load(open(path, "r"), Loader=yaml.FullLoader)
     return data
+
+def get_file_name(args):
+    file_name_parts = []
+    if args.result_file_name:
+        file_name_parts.append(args.result_file_name)
+    if args.speaker_id:
+        file_name_parts.append("spk" + str(args.speaker_id))
+    if len(file_name_parts) == 0:
+       file_name_parts.append(str(time.time()).replace('.', '_'))
+    file_name_parts.append("FastSpeech")
+    file_name = "_".join(file_name_parts)
+    return file_name

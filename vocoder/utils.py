@@ -1,5 +1,4 @@
 
-from vocoder import params
 from vocoder.models import Generator
 import json
 import torch
@@ -9,20 +8,20 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
         
-def get_vocoder(restore_step=0):
+def get_vocoder(config, device):
     with open("vocoder/ckpt/config.json", "r") as f:
-        config = json.load(f)
-    config = AttrDict(config)
-    vocoder = Generator(config)
+        model_config = json.load(f)
+    model_config = AttrDict(model_config)
+    vocoder = Generator(model_config)
 
-    if restore_step:
-        ckpt = torch.load(f"vocoder/ckpt/g_{restore_step}", map_location=params.device)
-    else:
-        ckpt = torch.load(f"vocoder/ckpt/{params.model_name}", map_location=params.device)
+    # if config['restore_step']:
+    #     ckpt = torch.load(f"vocoder/ckpt/g_{config['restore_step']}", map_location=config['device'])
+    # else:
+    ckpt = torch.load(f"vocoder/ckpt/{config['model_name']}", map_location=device)
 
     vocoder.load_state_dict(ckpt["generator"])
     vocoder.eval()
     vocoder.remove_weight_norm()
-    vocoder.to(params.device)
+    vocoder.to(device)
     return vocoder
 

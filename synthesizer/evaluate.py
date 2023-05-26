@@ -8,7 +8,7 @@ from .dataset import Dataset
 
 def evaluate(model, step, config, logger=None, vocoder=None):
     preprocess_config, model_config, train_config = config['synthesizer']['preprocess'], config['synthesizer']['model'], config['synthesizer']['train']
-    device = config['synthesizer']['main']['device']
+    device = config['main']['device']
     # Get dataset
     dataset = Dataset(
         "val.txt", preprocess_config, train_config, sort=False, drop_last=False
