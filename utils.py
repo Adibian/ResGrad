@@ -25,12 +25,11 @@ def save_result(mel_prediction, wav, pitch, energy, preprocess_config, result_di
 
 def load_models(all_restore_step, config):
     synthesizer_model, resgrad_model, vocoder_model = None, None, None
-    device = config['synthesizer']['main']['device']
+    device = config['main']['device']
     if all_restore_step['synthesizer'] not in [None, 0]:
         synthesizer_model = load_synthesizer_model(all_restore_step['synthesizer'], config).to(device)
     if all_restore_step['vocoder'] not in [None, 0]:
-        vocoder_model = get_vocoder(all_restore_step['vocoder']).to(device)
-    device = config['resgrad']['main']['device']
+        vocoder_model = get_vocoder(config['vocoder'], device).to(device)
     if all_restore_step['resgrad'] not in [None, 0]:
         resgrad_model = load_resgrad_model(config['resgrad'], train=False, restore_model_step=all_restore_step['resgrad']).to(device)
     return synthesizer_model, resgrad_model, vocoder_model

@@ -9,12 +9,12 @@ def get_model(restore_step, config, train=False):
     device = config['main']['device']
     model = FastSpeech2(config).to(device)
     if restore_step:
-        # ckpt_path = os.path.join(
-        #     config['synthesizer']['train']["path"]["ckpt_path"],
-        #     "{}.pth.tar".format(restore_step),
-        # )
+        ckpt_path = os.path.join(
+            config['synthesizer']['train']["path"]["ckpt_path"],
+            "{}.pth.tar".format(restore_step),
+        )
         # ckpt_path = "/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/MS_Persian/add_speaker_befor_and_after_VA/synthesizer/ckpt/1000000.pth.tar"
-        ckpt_path = "/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/MS_Persian/add_speaker_before_VA/synthesizer/ckpt/1000000.pth.tar"
+        # ckpt_path = "/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/MS_Persian/add_speaker_before_VA/synthesizer/ckpt/1000000.pth.tar"
         ckpt = torch.load(ckpt_path, map_location=torch.device(device))
         model.load_state_dict(ckpt["model"])
 
