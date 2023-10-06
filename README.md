@@ -6,7 +6,7 @@ This is an *unofficial* PyTorch implementation of **ResGrad** as a high-quality 
 
 ## Quickstart
 Data structures:
-`
+```
 dataset/data_name/synthesizer_data/
     test_data/
         speaker1/
@@ -18,36 +18,36 @@ dataset/data_name/synthesizer_data/
         ...
     test.txt  (sample1|speaker1|*phoneme_sequence \n ...)
     train.txt (sample1|speaker1|*phoneme_sequence \n ...)
-`
+```
 
 Preprocessing:
-`
+```
 python synthesizer/prepare_align.py config/data_name/config.yaml
 python synthesizer/preprocess.py config/data_name/config.yaml
-`
+```
 
 Train synthesizer:
-`
+```
 python train_synthesizer.py --config config/data_name/config.yaml
-`
+```
 
 Prepare data for ResGrade:
-`
+```
 python resgrad_data.py --synthesizer_restore_step 1000000 --data_file_path dataset/data_name/synthesizer_data/train.txt \
                         --config config/data_name/config.yaml
-`
+```
 
 Train ResGrade:
-`
+```
 python train_resgrad.py --config config/data_name/config.yaml
-`
+```
 
 Inference:
-`
+```
 python inference.py --text "phonemes sequence example" \
                     --synthesizer_restore_step 1000000 --regrad_restore_step 1000000 --vocoder_restore_step 2500000 \
                     --config config/data_name/config.yaml --result_dir output/data_name/results
-`
+```
 
 ## References :notebook_with_decorative_cover:
 - [ResGrad: Residual Denoising Diffusion Probabilistic Models for Text to Speech](https://arxiv.org/abs/2212.14518), Z. Chen, *et al*.
