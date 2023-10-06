@@ -48,7 +48,7 @@ class SpectumDataset(Dataset):
             target_spec = normalize_data(target_spec, self.config)
 
         if self.config['model']['model_type2'] == "segment-based":
-            start_phoneme_index = np.random.choice(len(durations)-4, 1)[0]
+            start_phoneme_index = np.random.choice(len(durations)-min(4, len(durations)-1), 1)[0]
             end_phoneme_index = 0
             for i in range(start_phoneme_index+1, len(durations)+1):
                 win_length = sum(durations[start_phoneme_index:i])

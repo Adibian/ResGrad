@@ -70,7 +70,7 @@ def synthesize(model, batch, control_values, preprocess_config, device, p_target
         )
     return mel[0].to(device), durations[0].to(device), pitch[0].to(device), energy[0].to(device)
 
-def infer(model, text, control_values, preprocess_config, device, speaker=None, p_target=None, d_target=None, e_target=None):
+def infer(model, text, control_values, preprocess_config, device, speaker=0, p_target=None, d_target=None, e_target=None):
     t = str(time.time()).replace('.', '_')
     ids = [t]
     speakers = np.array([speaker])

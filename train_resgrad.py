@@ -13,5 +13,5 @@ if __name__ == "__main__":
     # Read Config
     config = load_yaml_file(args.config)
     resgrad_config = config['resgrad']
-    resgrad_config['main'].update(config['main'])
+    resgrad_config['main'] = config['main']
     resgrad_train(args, resgrad_config)

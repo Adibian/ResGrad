@@ -1,11 +1,9 @@
 from .utils import denormalize_residual, denormalize_data, normalize_data
 
 import torch
-import numpy as np
 
 
-def infer(model, mel_prediction, duration_prediction, speaker, config):
-    device = config['main']['device']
+def infer(model, mel_prediction, duration_prediction, speaker, config, device):
     synthesized_spec = mel_prediction.unsqueeze(0).to(device)
     # synthesized_spec = torch.from_numpy(synthesized_spec)
     if config['data']['normallize_spectrum']:
@@ -58,15 +56,17 @@ def infer(model, mel_prediction, duration_prediction, speaker, config):
                 all_mask.append(mask.unsqueeze(0))
                 all_segment_spec.append(segment_spec)  
                 break
-
+        
+        speakers = [speaker] * len(all_segment_spec)
         mask = torch.cat(all_mask).to(device)
         segment_spec = torch.cat(all_segment_spec).to(device)
         z = segment_spec + torch.randn_like(segment_spec, device=device) / 1.5
         segments_pred = torch.zeros(segment_spec.shape)
+        speakers = torch.tensor(speakers)
         batch_size = config['data']['batch_size']
         for i in range(0, segment_spec.shape[0], batch_size):
             segments_pred = model(z[i:i+batch_size], mask[i:i+batch_size], segment_spec[i:i+batch_size], \
-                                                  n_timesteps=25, stoc=False, spk=speaker)
+                                                  n_timesteps=50, stoc=False, spk_id=speakers[i:i+batch_size])
 
         for i in range(len(segments_pred)):
             segment_pred = segments_pred[i,:,:all_spec_size[i]]
@@ -74,7 +74,7 @@ def infer(model, mel_prediction, duration_prediction, speaker, config):
     else:
         mask = torch.ones(synthesized_spec.shape).to(device)
         z = synthesized_spec + torch.randn_like(synthesized_spec, device=device) / 1.5
-        pred = model(z, mask, synthesized_spec, n_timesteps=25, stoc=False, spk=speaker)
+        pred = model(z, mask, synthesized_spec, n_timesteps=100, stoc=False, spk_id=[speaker])
     pred = pred.to(device)
     
     if config['model']['model_type1'] == "spec2residual":

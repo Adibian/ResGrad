@@ -4,7 +4,7 @@
 main:
   dataset: &Dataset "Persian"
   multi_speaker: False
-  device: "cuda"  ## "cpu" or "cuda" (for using all GPUs) or "cuda:0" or "cuda:1" or ...
+  device: "cpu"  ## "cpu" or "cuda" (for using all GPUs) or "cuda:0" or "cuda:1" or ...
 
 
 ############################################################################################

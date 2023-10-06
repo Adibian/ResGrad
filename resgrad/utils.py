@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import os
+import json
 from .model import Diffusion
 from .model.optimizer import ScheduledOptim
 
@@ -72,17 +73,20 @@ def denormalize_residual(residual_spec, config):
         print("normalized method is not supported!")
     return residual_spec
 
-def load_model(config, train=False, restore_model_step=0):
-    model = Diffusion(n_feats=config['model']['n_feats'], dim=config['model']['dim'], n_spks=config['model']['n_spks'], \
+def load_model(config, device, train=False, restore_model_step=0):
+    with open(config['data']['speaker_map_path']) as f:
+        speaker_map = json.load(f)
+        n_spks = len(speaker_map.keys())
+    model = Diffusion(n_feats=config['model']['n_feats'], dim=config['model']['dim'], n_spks=n_spks, \
                       spk_emb_dim=config['model']['spk_emb_dim'], beta_min=config['model']['beta_min'], \
                       beta_max=config['model']['beta_max'], pe_scale=config['model']['pe_scale'])
-    model = model.to(config['main']['device'])
+    model = model.to(device)
     if restore_model_step > 0:
         checkpoint = torch.load(os.path.join(config['train']['save_model_path'], f'ResGrad_step{restore_model_step}.pth'), \
-                                map_location=config['main']['device'])
+                                map_location=device)
         # checkpoint = torch.load(os.path.join("/mnt/hdd1/adibian/FastSpeech2/ResGrad/output/Persian/dur_taget_pitch_target/resgrad/ckpt", \
         #                                      f'ResGrad_epoch{restore_model_epoch}.pth'), \
-        #                         map_location=config['main']['device'])
+        #                         map_location=device)
         model.load_state_dict(checkpoint['model'])
 
     if train:

@@ -11,14 +11,16 @@ vocoder/ckpt/g_2500000
 output/*
 
 ## Data
-dataset/Persian/synthesizer_data/*
-dataset/Persian/resgrad_data/*
-dataset/MS_Persian/synthesizer_data/*
-dataset/MS_Persian/resgrad_data/*
-dataset/LJSpeech/synthesizer_data/wavs
-dataset/LJSpeech/resgrad_data/*
+dataset/*
+# dataset/Persian/synthesizer_data/*
+# dataset/Persian/resgrad_data/*
+# dataset/MS_Persian/synthesizer_data/*
+# dataset/MS_Persian/resgrad_data/*
+# dataset/LJSpeech/synthesizer_data/wavs
+# dataset/LJSpeech/resgrad_data/*
 
 ## Others
+auto_inference.py
 commands.txt
 *__pycache__/
 

@@ -116,9 +116,10 @@ resgrad:
   ################## Training ###################
   train:
     lr: 0.0001
-    epochs: 70
+    total_steps: 200000
+    validate_step: 200
+    save_ckpt_step: 10000
     save_model_path: !join ["output/", *Dataset, "resgrad/ckpt"]
-    validate_every_n_step: 20
     log_dir: !join ["output/", *Dataset, "resgrad/log"]
 
   ############ Model Parameters #################
@@ -127,7 +128,7 @@ resgrad:
     model_type2: "segment-based"  ## "segment-based" or "sentence-based"
     n_feats: 80
     dim: 64
-    n_spks: 1
+    # n_spks: 1
     spk_emb_dim: 64
     beta_min: 0.05
     beta_max: 20.0

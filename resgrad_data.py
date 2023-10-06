@@ -42,8 +42,8 @@ def main():
     os.makedirs(mel_pred_dir, exist_ok=True)
 
     resgrad_data = []
-    device = config['synthesizer']['main']['device']
-    # i = 0
+    device = config['main']['device']
+    i = 0
     for (speaker, file_name), text in tqdm(text_data.items()):
         # i +=1 
         # if i>30:
@@ -52,6 +52,9 @@ def main():
         pitch_file_name = speaker + "-pitch-" + file_name + ".npy"
         dur_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'duration', dur_file_name)
         pitch_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'pitch', pitch_file_name)
+
+        if not os.path.exists(dur_path):
+            continue
 
         mel_target_file_name = speaker + "-mel-" + file_name + ".npy"
         mel_target_path = os.path.join(config['synthesizer']['preprocess']['path']['preprocessed_path'], 'mel', mel_target_file_name)

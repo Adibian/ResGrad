@@ -236,6 +236,11 @@ class Diffusion(BaseModule):
         self.beta_min = beta_min
         self.beta_max = beta_max
         self.pe_scale = pe_scale
+        if n_spks>1:
+            self.spk_emb = torch.nn.Embedding(
+                n_spks,
+                spk_emb_dim
+            )
         
         self.estimator = GradLogPEstimator2d(dim, n_spks=n_spks,
                                              spk_emb_dim=spk_emb_dim,
@@ -275,20 +280,24 @@ class Diffusion(BaseModule):
         return xt
 
     @torch.no_grad()
-    def forward(self, z, mask, mu, n_timesteps, stoc=False, spk=None):
+    def forward(self, z, mask, mu, n_timesteps, stoc=False, spk_id=None):
+        if self.n_spks > 1:
+            spk = self.spk_emb(spk_id)
         return self.reverse_diffusion(z, mask, mu, n_timesteps, stoc, spk)
 
-    def loss_t(self, x0, mask, mu, t, spk=None):
+    def loss_t(self, x0, mask, mu, t, spk_id=None):
         xt, z = self.forward_diffusion(x0, mask, mu, t)
         time = t.unsqueeze(-1).unsqueeze(-1)
         cum_noise = get_noise(time, self.beta_min, self.beta_max, cumulative=True)
+        if self.n_spks > 1:
+            spk = self.spk_emb(spk_id)
         noise_estimation = self.estimator(xt, mask, mu, t, spk)
         noise_estimation *= torch.sqrt(1.0 - torch.exp(-cum_noise))
         loss = torch.sum((noise_estimation + z)**2) / (torch.sum(mask)*self.n_feats)
         return loss, xt
 
-    def compute_loss(self, x0, mask, mu, spk=None, offset=1e-5):
+    def compute_loss(self, x0, mask, mu, spk_id=None, offset=1e-5):
         t = torch.rand(x0.shape[0], dtype=x0.dtype, device=x0.device,
                        requires_grad=False)
         t = torch.clamp(t, offset, 1.0 - offset)
-        return self.loss_t(x0, mask, mu, t, spk)
+        return self.loss_t(x0, mask, mu, t, spk_id)

@@ -9,7 +9,7 @@ import time
 def infer():
     parser = argparse.ArgumentParser()
     parser.add_argument("--text", type=str, required=True)
-    parser.add_argument("--speaker_id", type=int, default=None, required=False)
+    parser.add_argument("--speaker_id", type=int, default=0, required=False)
     parser.add_argument("--synthesizer_restore_step", type=int, required=True)
     parser.add_argument("--regrad_restore_step", type=int, required=False)
     parser.add_argument("--vocoder_restore_step", type=int, default=0 ,required=False)
@@ -49,10 +49,10 @@ def infer():
     RTF_FastSpeech = FastSpeech_process_time / wav_length
     print("FastSpeech2 RTF: {:.6f}".format(RTF_FastSpeech))
 
-    # ## ResGrad
+    ## ResGrad
     # print("Inference from ResGrad...")
     # start_time = time.time()
-    # mel_prediction = resgrad_infer(resgrad_model, mel_prediction, duration_prediction, args.speaker_id, config['resgrad'])
+    # mel_prediction = resgrad_infer(resgrad_model, mel_prediction, duration_prediction, args.speaker_id, config['resgrad'], config['main']['device'])
     # end_time = time.time()
     # ResGrad_process_time = end_time-start_time
 

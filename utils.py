@@ -31,7 +31,7 @@ def load_models(all_restore_step, config):
     if all_restore_step['vocoder'] not in [None, 0]:
         vocoder_model = get_vocoder(config['vocoder'], device).to(device)
     if all_restore_step['resgrad'] not in [None, 0]:
-        resgrad_model = load_resgrad_model(config['resgrad'], train=False, restore_model_step=all_restore_step['resgrad']).to(device)
+        resgrad_model = load_resgrad_model(config['resgrad'], train=False, restore_model_step=all_restore_step['resgrad'], device=device).to(device)
     return synthesizer_model, resgrad_model, vocoder_model
 
 def load_yaml_file(path):

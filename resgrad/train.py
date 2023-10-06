@@ -143,9 +143,9 @@ def resgrad_train(args, config):
                             z = synthesized_spec + torch.randn_like(synthesized_spec, device=device) / 1.5
                             # Generate sample by performing reverse dynamics
                             if config['main']['multi_speaker']:
-                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=speakers)
+                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk_id=speakers)
                             else:
-                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk=None)
+                                pred = model(z, mask, synthesized_spec, n_timesteps=50, stoc=False, spk_id=None)
                             for i in range(3):
                                 logging(logger, config, original_spec[i], synthesized_spec[i], target_residual[i], noisy_spec[i], pred[i], mask[i], \
                                         f'image{i}_step{step}', step)
