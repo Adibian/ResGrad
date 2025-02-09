@@ -54,3 +54,7 @@ python inference.py --text "phonemes sequence example" \
 - [ResGrad: Residual Denoising Diffusion Probabilistic Models for Text to Speech](https://arxiv.org/abs/2212.14518), Z. Chen, *et al*.
 - [FastSpeech 2: Fast and High-Quality End-to-End Text to Speech](https://arxiv.org/abs/2006.04558), Y. Ren, *et al*.
 - [Grad-TTS: A Diffusion Probabilistic Model for Text-to-Speech](https://arxiv.org/abs/2105.06337), V. Popov, *et al*.
+
+
+## License  
+This repository is an implementation of the [**ResGrad**](https://arxiv.org/abs/2212.14518) paper, and is licensed under the MIT License. 
